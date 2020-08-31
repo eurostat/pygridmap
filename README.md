@@ -1,13 +1,13 @@
 pygridmap
 =========
 
-Geometric grid mapping operations including regular grid maker and grid overlay
+Geometric grid geometric and set mapping operations.
 ---
 
 
 **About**
 
-The `pygridmap` package enable you to perform some basic geometric/set operations over vector datasets. 
+The `pygridmap` package enable you to perform some basic geometric/set operations over vector datasets, including regular grid maker and grid overlay. 
 
 <table align="center">
     <tr> <td align="left"><i>documentation</i><b>in construction</b></td>  </tr> 
