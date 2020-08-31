@@ -1,7 +1,7 @@
 pygridmap
 =========
 
-Geometric grid geometric and set mapping operations.
+Geometric grid and set mapping operations.
 ---
 
 
