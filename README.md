@@ -4,20 +4,7 @@ pygridmap
 Geometric grid and set mapping operations.
 ---
 
-
-**About**
-
 The `pygridmap` package enable you to perform some basic geometric/set operations over vector datasets, including regular grid maker (_i.e._, rasterisation) and grid overlay (_i.e._ intersection and union). The code takes advantage of multiprocessor capabilities for efficient tile-based processing. 
-
-<table align="center">
-    <tr> <td align="left"><i>documentation</i></td> <td align="left"><b>in construction</b></td>  </tr> 
-    <tr> <td align="left"><i>status</i></td> <td align="left">since 2020 &ndash; <b>ongoing</b></td></tr> 
-    <tr> <td align="left"><i>contributors</i></td> 
-    <td align="left" valign="middle">
-<a href="https://github.com/gjacopo"><img src="https://github.com/gjacopo.png" width="40"></a>
-</td> </tr> 
-    <tr> <td align="left"><i>license</i></td> <td align="left"><a href="https://joinup.ec.europa.eu/sites/default/files/eupl1.1.-licence-en_0.pdfEUPL">EUPL</a> </td> </tr> 
-</table>
 
 **Description**
 
@@ -56,7 +43,19 @@ They also adopt (customised, using the [`multiprocessing`](https://docs.python.o
 <!-- ![tile processing](docs/BE_tile_processing.png)-->
 <table align="center"> <tr> <td align="center" width="300px"> <img src="docs/BE_tile_processing.png"></img></td> </tr> </table>
 
-**<a name="Software"></a>Software resources/dependencies**
+**About**
+
+<table align="center">
+    <tr> <td align="left"><i>documentation</i></td> <td align="left"><b>in construction</b></td>  </tr> 
+    <tr> <td align="left"><i>status</i></td> <td align="left">since 2020 &ndash; <b>ongoing</b></td></tr> 
+    <tr> <td align="left"><i>contributors</i></td> 
+    <td align="left" valign="middle">
+<a href="https://github.com/gjacopo"><img src="https://github.com/gjacopo.png" width="40"></a>
+</td> </tr> 
+    <tr> <td align="left"><i>license</i></td> <td align="left"><a href="https://joinup.ec.europa.eu/sites/default/files/eupl1.1.-licence-en_0.pdfEUPL">EUPL</a> </td> </tr> 
+</table>
+
+**<a name="Resources"></a>Resources**
 
 * Data handling: [`numpy`](https://numpy.org/) and [`pandas`](http://pandas.pydata.org).
 * Geospatial data processing: [`geopandas`](http://geopandas.org),[`fiona`](https://fiona.readthedocs.io/en/latest/manual.html) libraries) and [shapely](https://pypi.org/project/Shapely/).
