@@ -59,7 +59,7 @@ They also adopt (customised, using the [`multiprocessing`](https://docs.python.o
 **<a name="Resources"></a>Resources**
 
 * Data handling: [`numpy`](https://numpy.org/) and [`pandas`](http://pandas.pydata.org).
-* Geospatial data processing: [`geopandas`](http://geopandas.org),[`fiona`](https://fiona.readthedocs.io/en/latest/manual.html) libraries) and [shapely](https://pypi.org/project/Shapely/).
+* Geospatial data processing: [`geopandas`](http://geopandas.org),[`fiona`](https://fiona.readthedocs.io/en/latest/manual.html) and [shapely](https://pypi.org/project/Shapely/).
 * Map visualisations: [`ipyleaflet`](https://github.com/jupyter-widgets/ipyleaflet) or [`folium`](https://github.com/python-visualization/folium).
 
 **<a name="References"></a>References**
