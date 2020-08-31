@@ -10,7 +10,7 @@ Geometric grid mapping operations including regular grid maker and grid overlay
 The `pygridmap` package enable you to perform some basic geometric/set operations over vector datasets. 
 
 <table align="center">
-    <tr> <td align="left"><i>documentation</i></td> <b>in construction</b> </tr> 
+    <tr> <td align="left"><i>documentation</i><b>in construction</b></td>  </tr> 
     <tr> <td align="left"><i>status</i></td> <td align="left">since 2020 &ndash; <b>ongoing</b></td></tr> 
     <tr> <td align="left"><i>contributors</i></td> 
     <td align="left" valign="middle">
