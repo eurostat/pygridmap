@@ -40,7 +40,7 @@ The operations above are making an extensive use of the geometric/geospatial `Py
   
 These implementations are probably not optimal since they are wrappers to the [`GEOS`](https://trac.osgeo.org/geos/) library, itself a port of the Java Topology Suite ([`JTS`](https://projects.eclipse.org/projects/locationtech.jts)), similarly to what is used in QGis.
 
-They also adopt (customised, using the [`multiprocessing`](https://docs.python.org/3/library/multiprocessing.html) module) multitprocessor tiling processing together with (native) vector processing whenever possible (the regular grid often makes the computation embarassingly parallel) in order to take advantage of multiprocessor compute capabilities.
+They also adopt (customised, using the [`multiprocessing`](https://docs.python.org/3/library/multiprocessing.html) module) multitprocessor tiling processing together with (native) vector processing whenever possible in order to take advantage of multiprocessor compute capabilities. Note also that the [`FrameProcessor`](pygridmap/base.py) class can be used to run embarassing parallel calculations on dataframe rows.
 <!-- ![tile processing](docs/BE_tile_processing.png)-->
 <table align="center"> <tr> <td align="center" width="300px"> <img src="docs/BE_tile_processing.png"></img></td> </tr> </table>
 
