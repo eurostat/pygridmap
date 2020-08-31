@@ -56,12 +56,12 @@ else:
     from shapely import geometry, ops, wkt
 
 try:
-	import multiprocessing as mp
-	from queue import Empty
+    import multiprocessing as mp
+    from queue import Empty
 except: 
-	NPROCESSES = NCPUS = 1
+    NPROCESSES = NCPUS = 1
 else:
-	NPROCESSES = NCPUS = mp.cpu_count()
+    NPROCESSES = NCPUS = mp.cpu_count()
 
 	
 #%% Core functions/classes
