@@ -19,6 +19,7 @@ The package `pygridmap` supports the following methods/algorithms:
         <td align="center" width="300px"> <img src="docs/BE_gridding.png"></img></td>
         <td align="center" width="300px"> <img src="docs/BE_interior_gridding.png"></img></td>
 </tr> </table>
+
 * customised [**vector overlay operations**](https://docs.qgis.org/3.10/en/docs/user_manual/processing_algs/qgis/vectoroverlay.html) (_e.g._, intersection, union, overlay/overlap and merging) between any polygon layer and a regular grid with the [`Gridoverlay`](pygridmap/overlay.py) class.
 <!-- ![bounding boxes](docs/BE_overlay.png)-->
 <table align="center"> <tr> <td align="center" width="300px"> <img src="docs/BE_overlay.png"></img></td></tr> </table>
