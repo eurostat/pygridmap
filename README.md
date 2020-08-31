@@ -21,7 +21,18 @@ The `pygridmap` package enable you to perform some basic geometric/set operation
 
 **Description**
 
+* Basic geometric and geoprocessing over regular grid with the [`GridProcessor` class](pygridmap/base.py),
+* Grid maker (_i.e._, rasterisation of polygon layers) with the [`GridMaker` class](pygridmap/gridding.py).
+* Grid overlay operations (_e.g._, intersection and union) with the [`Gridoverlay` class](pygridmap/overlay.py).
+
 **Quick install and start**
+
+**Usage**
+
+*In your `Python` script*
+
+*Through the `bash` command*
+
 
 **<a name="Software"></a>Software resources/dependencies**
 
