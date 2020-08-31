@@ -13,7 +13,7 @@ The package `pygridmap` supports the following methods/algorithms:
 <!-- ![bounding boxes](docs/bbox_manipulation.png)-->
 <table align="center"> <tr> <td align="center" width="750px"> <img src="docs/bbox_manipulation.png"></img></td></tr> </table>
 
-* user-defined [**rasterisation**](https://en.wikipedia.org/wiki/Rasterisation) of polygon regions (_e.g._, vector boundaries) into regular grids of various resolutions (_i.e._, dimension of square grid cells) with the [`GridMaker`](pygridmap/gridding.py) class (see also [GridMaker](https://github.com/eurostat/GridMaker)),
+* user-defined [**rasterisation**](https://en.wikipedia.org/wiki/Rasterisation) of polygon regions (_e.g._, vector boundaries) into regular grids of various resolutions (_i.e._, dimension of square grid cells) with the [`GridMaker`](pygridmap/gridding.py) class (see also `Java` implementation [GridMaker](https://github.com/eurostat/GridMaker)),
 <!-- ![bounding boxes](docs/BE_interior_gridding.png)-->
 <table align="center"><tr> 
         <td align="center" width="300px"> <img src="docs/BE_gridding.png"></img></td>
