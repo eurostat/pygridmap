@@ -71,9 +71,12 @@ else:
 #==============================================================================
 
 class FrameProcessor():
+
+    #/************************************************************************/
     def __init__(self, cores=None):
         self.cores = cores or mp.cpu_count()
         
+    #/************************************************************************/
     def __call__(self, df, func):
         pool = mp.Pool(processes=self.cores)
         df = pd.concat(
@@ -85,11 +88,13 @@ class FrameProcessor():
         pool.join()
         return df
     
+    #/************************************************************************/
     @classmethod
     def _on_row(cls, func, df):
         #rows_iter = (row for _, row in df.iterrows())
         return df.apply(func, axis=1)
 
+    #/************************************************************************/
     def on_row(self, df, func):
         return self.__call__(df, functools.partial(self._on_row, func))
 
@@ -127,6 +132,7 @@ class GridProcessor():
         except: raise TypeError("Wrong format for cores number")
         self.__cores = cores
             
+    #/************************************************************************/
     @property
     def cell(self):
         return self.__cell
@@ -138,6 +144,7 @@ class GridProcessor():
         except: raise TypeError("Wrong format for cell size parameter")
         self.__cell = [cell, cell] if np.isscalar(cell) else cell
             
+    #/************************************************************************/
     @property
     def tile(self):
         return self.__tile
@@ -151,6 +158,7 @@ class GridProcessor():
             tile = self.cores if tile is True else 1
         self.__tile = tile
     
+    #/************************************************************************/
     @property
     def sorted(self):
         return self.__sorted    
