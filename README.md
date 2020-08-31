@@ -25,7 +25,7 @@ The `pygridmap` package enable you to perform some basic geometric/set operation
 
 **<a name="Software"></a>Software resources/dependencies**
 
-* Packages for (geospatial) data handling: [`pandas`](http://pandas.pydata.org) and [`geopandas`](http://geopandas.org).
+* Packages for (geospatial) data handling: [`pandas`](http://pandas.pydata.org), [`geopandas`](http://geopandas.org), and [shapely](https://pypi.org/project/Shapely/).
 * Packages for map visualisations: [`ipyleaflet`](https://github.com/jupyter-widgets/ipyleaflet) or [`folium`](https://github.com/python-visualization/folium).
 
 **<a name="References"></a>References**
