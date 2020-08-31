@@ -1,7 +1,7 @@
 pygridmap
 =========
 
-Geometric grid and set mapping operations.
+Geoprocessing tools for efficient grid mapping and geometric/set operations.
 ---
 
 The `pygridmap` package enable you to perform some basic geometric/set operations over vector datasets, including regular grid maker (_i.e._, rasterisation) and grid overlay (_i.e._ intersection and union). The code takes advantage of multiprocessor capabilities for efficient tile-based processing. 
