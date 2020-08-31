@@ -1,8 +1,33 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+"""
+.. _base
+
+.. Links
+.. _Eurostat: http://ec.europa.eu/eurostat/web/main
+.. |Eurostat| replace:: `Eurostat <Eurostat_>`_
+
+Base module enabling basic data processing and grid geoprocessing.
+
+**Dependencies**
+
+*require*:      :mod:`os`, :mod:`sys`, :mod:`itertools`, :mod:`functools`, :mod:`math`, :mod`time`,  
+                :mod:`numpy`, :mod:`pandas`, :mod:`geopandas`, :mod:`shapely`
+*optional*:     :mod:`dask`, :mod:`multiprocessing`
+
+**Contents**
+"""
+
+# *credits*:      `gjacopo <jacopo.grazzini@ec.europa.eu>`_ 
+# *since*:        Mon 6 2020
+
+#%% Settings     
 
 import os, sys
 import requests
 import warnings
-import math, time, timeit
+import math, time
 import itertools, functools
 
 import json
@@ -17,7 +42,6 @@ try:
     import dask.dataframe as dd
 except:
     pass # print("!!! Error importing dask !!!")
-
 
 try:
     import geopandas as gpd
@@ -38,6 +62,13 @@ except:
 	NPROCESSES = NCPUS = 1
 else:
 	NPROCESSES = NCPUS = mp.cpu_count()
+
+	
+#%% Core functions/classes
+
+#==============================================================================
+# Class FrameProcessor
+#==============================================================================
 
 class FrameProcessor():
     def __init__(self, cores=None):
@@ -62,11 +93,17 @@ class FrameProcessor():
     def on_row(self, df, func):
         return self.__call__(df, functools.partial(self._on_row, func))
 
+
+#==============================================================================
+# Class GridProcessor
+#==============================================================================
+
 class GridProcessor():
         
     MODES = ['prll', 'seq']
     SORTS = ['rc', 'cr']
     
+    #/************************************************************************/
     def __init__(self, **kwargs):
         # some dumb init
         self.__mode, self.__cores = None, 1
@@ -79,6 +116,7 @@ class GridProcessor():
         self.sorted = kwargs.pop('sorted', False)
         self.asc = kwargs.pop('asc', True)
        
+    #/************************************************************************/
     @property
     def cores(self):
         return self.__cores
@@ -125,6 +163,7 @@ class GridProcessor():
             sort = self.SORTS[0]
         self.__sorted = sort
     
+    #/************************************************************************/
     @staticmethod
     def set_ref_proj(grid, polygons):
         if grid.crs == polygons.crs:
@@ -132,6 +171,7 @@ class GridProcessor():
         else:
             return polygons.to_crs(grid.crs)
 
+    #/************************************************************************/
     @staticmethod
     def get_bbox(grid, polygons, gridbbox=True):
         if gridbbox is True:
@@ -141,6 +181,7 @@ class GridProcessor():
         else:
             return polygons.to_crs(grid.crs).unary_union.union(grid.unary_union).envelope.bounds
         
+    #/************************************************************************/
     @staticmethod
     def get_grid_shape(cellsize, bbox, buffer=None):
         # Return the 'shape' of the grid covering the bounding box, i.e. the (y,x) number of unit cells 
@@ -151,6 +192,7 @@ class GridProcessor():
         return [int(np.ceil((ymax-ymin+2*buffy)/height)), 
                 int(np.ceil((xmax-xmin+2*buffx)/width))]  
     
+    #/************************************************************************/
     @staticmethod
     def set_tile_shape(ntiles, gridshape=None):
         n = math.sqrt(ntiles)
@@ -165,6 +207,7 @@ class GridProcessor():
         else: 
             return [nf+1, nc] if nrows >= ncols else [nc, nf+1]
 
+    #/************************************************************************/
     @staticmethod
     def get_tile_shape(cellsize, tilesize, bbox, buffer=None):
         # Return the (x,y) shape/dimension (in # of tiles) of the tiling (made of unit cells of given size) 
@@ -178,6 +221,7 @@ class GridProcessor():
         return [int(np.ceil(nrows / nygrid)), 
                 int(np.ceil(ncols / nxgrid))] # = #{tiles covering the grid}
 
+    #/************************************************************************/
     @staticmethod
     def get_tile_size(cellsize, tileshape, bbox, buffer=None):
         # Return the (x,y) size (in # of unit cells of given size) of the tiling (with given shape) 
@@ -190,6 +234,7 @@ class GridProcessor():
         return [int(np.ceil(nrows / nytile)), 
                 int(np.ceil(ncols / nxtile))] # = #{cells in a tile}
     
+    #/************************************************************************/
     @staticmethod
     def bbox_to_polygon(west, south, east, north, density=False, buffer=False):
         # Return a polygon geometry given by the bounding box coordinates
@@ -208,6 +253,7 @@ class GridProcessor():
         poly = geometry.Polygon(poly)
         return poly if buffer is False else poly.buffer(0)
  
+    #/************************************************************************/
     @classmethod
     def bbox_to_geoframe(cls, west, south, east, north, 
                          density=False, buffer=False, crs=None):
@@ -220,6 +266,7 @@ class GridProcessor():
             bbox.crs = crs
         return bbox
             
+    #/************************************************************************/
     @staticmethod
     def get_tile_bbox(idx, cellsize, tilesize, bbox, crop, buffer=None):
         # Return the bounding box of a tile for a given index
@@ -236,6 +283,7 @@ class GridProcessor():
                 bxmax, 
                 bymax]
         
+    #/************************************************************************/
     @staticmethod
     def get_pos_location(cellsize, bbox, pos='LLc', buffer=None, yreverse=True):
         # Return the location of the ['LLc','LRc','URc','ULc','CC'] of the grid cells
@@ -261,6 +309,7 @@ class GridProcessor():
             idrows.reverse()
         return idrows, idcols
 
+    #/************************************************************************/
     @classmethod
     def build_from_pos(cls, cellsize, idrows, idcols, pos='LLc'):
         # Return all unit cells of a regular grid as a list of boundin box polygons
@@ -278,6 +327,7 @@ class GridProcessor():
          for x in idcols for y in idrows] # note the order: cols then rows
         return polygrid
     
+    #/************************************************************************/
     @staticmethod
     def align_pos_location(cellsize, bbox, loc, pos='LLc', maxsize=None):
         # Return a bounding box for a regular grid that will encompass the provided 
@@ -316,6 +366,7 @@ class GridProcessor():
             loc_new[1], loc_new[3] = loc_new[1] + height/2, loc_new[3] + height/2
         return loc_new
     
+    #/************************************************************************/
     @classmethod
     def intersection(cls, *arg, **kwargs):
         # Return the intersection of an input geometry with an arbitrary number of 
@@ -368,6 +419,7 @@ class GridProcessor():
         return functools.reduce(_intersection_bbox if isinstance(geom, (tuple,list)) else _intersection_polygon, 
                                 [geom, *args])   
     
+    #/************************************************************************/
     @classmethod
     def unary_union(cls, geom, *args, **kwargs):
         # Perform repeated unary_union operations of a given geometry with an arbitrary 
@@ -405,3 +457,6 @@ class GridProcessor():
                 return geom
         return functools.reduce(_union_bbox if isinstance(geom, (tuple,list)) else _union_polygon, 
                                 [geom, *args])    
+
+
+#%% Main for binary usage
