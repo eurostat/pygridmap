@@ -61,7 +61,12 @@ They also
 **<a name="Resources"></a>Resources**
 
 * Data handling: [`numpy`](https://numpy.org/) and [`pandas`](http://pandas.pydata.org).
-* Geospatial data processing: [`geopandas`](http://geopandas.org),[`fiona`](https://fiona.readthedocs.io/en/latest/manual.html) and [shapely](https://pypi.org/project/Shapely/).
+* Geospatial data processing: [`geopandas`](http://geopandas.org), [`fiona`](https://fiona.readthedocs.io/en/latest/manual.html), [shapely](https://pypi.org/project/Shapely/), [`RTree`](https://toblerity.org/rtree/), [`geopy`](https://github.com/geopy/geopy) and [`pyproj`](https://github.com/pyproj4/pyproj).
 * Map visualisations: [`ipyleaflet`](https://github.com/jupyter-widgets/ipyleaflet) or [`folium`](https://github.com/python-visualization/folium).
+* See also project [python-geospatial](https://github.com/giswqs/python-geospatial), a collection of `Python` packages for geospatial analysis.
 
 **<a name="References"></a>References**
+
+* de Smith M.J., Goodchild M.F. and Longley P.A. (2018): [**Geospatial AnalysisA Comprehensive Guide to PrinciplesTechniques and Software Tool**](https://www.spatialanalysisonline.com/HTML/index.html), _The Winchelsea Press_. 
+* Westra E. (2016): [**Python Geospatial Development**](https://www.programmer-books.com/wp-content/uploads/2019/04/Python-Geospatial-Development-3rd-Edition.pdf), _Packt Publishing_.
+* Kresse W. and Danko D.M., eds. (2012): **Handbook of Geographic Information**, _Springer_, doi: [10.1007/978-3-540-72680-7](https://doi.org/10.1007/978-3-540-72680-7).
