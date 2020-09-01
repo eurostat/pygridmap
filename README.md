@@ -9,18 +9,18 @@ The `pygridmap` package enable you to perform some basic geometric/set operation
 **Description**
 
 The package `pygridmap` supports the following methods/algorithms: 
-* basic [**geometric/set operations and geoprocessing**] over regular grid (_e.g._, bounding box manipulations) with the [`GridProcessor`](pygridmap/base.py) class,
+* basic [**geometric/set operations and geoprocessing**] over geospatial grid (_e.g._, bounding box manipulations, corner definition, _etc_...) with the [`GridProcessor`](pygridmap/base.py) class,
 <!-- ![bounding boxes](docs/bbox_manipulation.png)-->
 <table align="center"> <tr> <td align="center" width="750px"> <img src="docs/bbox_manipulation.png"></img></td></tr> </table>
 
-* user-defined [**rasterisation**](https://en.wikipedia.org/wiki/Rasterisation) of polygon regions (_e.g._, vector boundaries) into regular grids of various resolutions (_i.e._, dimension of square grid cells) with the [`GridMaker`](pygridmap/gridding.py) class (see also `Java` implementation [GridMaker](https://github.com/eurostat/GridMaker)),
+* user-defined [**rasterisation**](https://en.wikipedia.org/wiki/Rasterisation) of polygon regions (_e.g._, vector boundaries) into regular grids of various resolutions (_i.e._, dimension of one-size square grid cells) with the [`GridMaker`](pygridmap/gridding.py) class (see also `Java` implementation [GridMaker](https://github.com/eurostat/GridMaker)),
 <!-- ![bounding boxes](docs/BE_interior_gridding.png)-->
 <table align="center"><tr> 
         <td align="center" width="300px"> <img src="docs/BE_gridding.png"></img></td>
         <td align="center" width="300px"> <img src="docs/BE_interior_gridding.png"></img></td>
 </tr> </table>
 
-* customised [**vector overlay operations**](https://docs.qgis.org/3.10/en/docs/user_manual/processing_algs/qgis/vectoroverlay.html) (_e.g._, intersection, union, overlay/overlap and merging) between any polygon layer and a regular grid with the [`Gridoverlay`](pygridmap/overlay.py) class.
+* customised [**vector overlay operations**](https://docs.qgis.org/3.10/en/docs/user_manual/processing_algs/qgis/vectoroverlay.html) (_e.g._, intersection, union, overlay/overlap and merging) between any polygon layer and a geospatial grid ("regular" or not) with the [`Gridoverlay`](pygridmap/overlay.py) class.
 <!-- ![bounding boxes](docs/BE_overlay.png)-->
 <table align="center"> <tr> <td align="center" width="300px"> <img src="docs/BE_overlay.png"></img></td></tr> </table>
 
