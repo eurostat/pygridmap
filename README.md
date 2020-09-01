@@ -67,6 +67,6 @@ They also
 
 **<a name="References"></a>References**
 
-* de Smith M.J., Goodchild M.F. and Longley P.A. (2018): [**Geospatial AnalysisA Comprehensive Guide to PrinciplesTechniques and Software Tool**](https://www.spatialanalysisonline.com/HTML/index.html), _The Winchelsea Press_. 
+* de Smith M.J., Goodchild M.F. and Longley P.A. (2018): [**Geospatial Analysis: A Comprehensive Guide to Principles, Techniques and Software Tools**](https://www.spatialanalysisonline.com/HTML/index.html), _The Winchelsea Press_. 
 * Westra E. (2016): [**Python Geospatial Development**](https://www.programmer-books.com/wp-content/uploads/2019/04/Python-Geospatial-Development-3rd-Edition.pdf), _Packt Publishing_.
 * Kresse W. and Danko D.M., eds. (2012): **Handbook of Geographic Information**, _Springer_, doi: [10.1007/978-3-540-72680-7](https://doi.org/10.1007/978-3-540-72680-7).
