@@ -9,7 +9,7 @@ The `pygridmap` package enable you to perform some basic geometric/set operation
 **Description**
 
 The package `pygridmap` supports the following methods/algorithms: 
-* basic [**geometric/set operations and geoprocessing**] over geospatial grid (_e.g._, bounding box manipulations, corner definition, _etc_...) with the [`GridProcessor`](pygridmap/base.py) class,
+* basic [**geometric/set operations and geoprocessing**] over geospatial grid (_e.g._, bounding box manipulations, locations definition, _etc_...) with the [`GridProcessor`](pygridmap/base.py) class,
 <!-- ![bounding boxes](docs/bbox_manipulation.png)-->
 <table align="center"> <tr> <td align="center" width="750px"> <img src="docs/bbox_manipulation.png"></img></td></tr> </table>
 
