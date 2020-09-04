@@ -18,7 +18,7 @@ Grid making operations.
 """
 
 # *credits*:      `gjacopo <jacopo.grazzini@ec.europa.eu>`_ 
-# *since*:        Mon 6 2020
+# *since*:        Jun 2020
 
 
 #%% Settings     
