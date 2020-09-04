@@ -20,7 +20,7 @@ Base module enabling basic data processing and grid geoprocessing.
 """
 
 # *credits*:      `gjacopo <jacopo.grazzini@ec.europa.eu>`_ 
-# *since*:        Mon 6 2020
+# *since*:        Jun 2020
 
 #%% Settings     
 
