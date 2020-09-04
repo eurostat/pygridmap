@@ -63,7 +63,6 @@ class GridMaker(GridProcessor):
     def __init__(self, **kwargs):
         self.__mode, self.__processor = None, None
         self.__buffer = None
-	self.__xypos = None
         super(GridMaker,self).__init__(**kwargs)
         self.mode = kwargs.pop('mode', 'prll')
         self.buffer = kwargs.get('buffer')
@@ -119,19 +118,6 @@ class GridMaker(GridProcessor):
         if asc is True and self.sorted!='tile':
             asc = [True,True] if self.sorted in ('rc','cr') else [True,True,True] 
         self.__asc = asc
-       
-    #/************************************************************************/
-    @property
-    def xypos(self):
-        return self.__xypos
-    @xypos.setter
-    def xypos(self, xypos):        
-        try:
-            assert (xypos is None or xypos in self.XYPOS)
-        except: raise TypeError("Wrong format for (Y,Y) coordinates location in the grid cell")
-        if xypos is None:
-            xypos = 'LLc'
-        self.__xypos = xypos
      
     #/************************************************************************/
     @classmethod
