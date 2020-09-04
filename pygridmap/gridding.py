@@ -118,10 +118,23 @@ class GridMaker(GridProcessor):
         if asc is True and self.sorted!='tile':
             asc = [True,True] if self.sorted in ('rc','cr') else [True,True,True] 
         self.__asc = asc
+       
+    #/************************************************************************/
+    @property
+    def xypos(self):
+        return self.__xypos
+    @xypos.setter
+    def xypos(self, xypos):        
+        try:
+            assert (xypos is None or xypos in self.XYPOS)
+        except: raise TypeError("Wrong format for (Y,Y) coordinates location in the grid cell")
+        if xypos is None:
+            xypos = 'LLc'
+        self.__xypos = xypos
      
     #/************************************************************************/
     @classmethod
-    def prll_process_tile(cls, idx, gridbbox, cellsize, tilesize,
+    def prll_process_tile(cls, idx, gridbbox, cellsize, tilesize, xypos,
                           mask, crs, interior, sort, trim, crop, buffer):
         iy, ix = idx[:2]
         if len(idx)>2: nytiles, nxtiles = idx[2:]
@@ -141,7 +154,7 @@ class GridMaker(GridProcessor):
             wans = tile.within(mask).tolist()[0] and 1 # note that wans = 1 => ians = 1
             ians = 1 if wans in (True,1) else tile.intersects(mask).tolist()[0]
         if ians in (True, 1):
-            rows, cols = cls.get_pos_location(cellsize, tilebbox, pos=XYPOSITION)
+            rows, cols = cls.get_pos_location(cellsize, tilebbox, pos = xypos)
             tile = gpd.GeoDataFrame({'geometry': cls.build_from_pos(cellsize, rows, cols),
                                      cls.COL_X: [x for x in cols for y in rows],
                                      cls.COL_Y: [y for x in cols for y in rows]
@@ -180,7 +193,7 @@ class GridMaker(GridProcessor):
 
     #/************************************************************************/
     @classmethod
-    def qtree_process_tile(cls, idx, gridbbox, cellsize, tilesize, 
+    def qtree_process_tile(cls, idx, gridbbox, cellsize, tilesize, xypos,
                            mask, crs, interior, sort, trim, crop, buffer):
         iy, ix = idx[:2]
         if len(idx)>2: nytiles, nxtiles = idx[2:]
@@ -213,7 +226,7 @@ class GridMaker(GridProcessor):
                     if ians in (True,1) and wans in (True,1):
                         break
             if wans in (True,1):
-                rows, cols  = cls.get_pos_location(cellsize, bbox, pos=XYPOSITION)
+                rows, cols  = cls.get_pos_location(cellsize, bbox, pos = xypos)
                 tile = gpd.GeoDataFrame({'geometry': cls.build_from_pos(cellsize, rows, cols),
                                          cls.COL_X: [x for x in cols for y in rows],
                                          cls.COL_Y: [y for x in cols for y in rows],
@@ -284,6 +297,7 @@ class GridMaker(GridProcessor):
         # settings
         cellsize, tilesize = self.cell, self.tile
         sort = self.sorted
+	xypos = self.xypos
         # verify processing mode
         if self.mode == 'qtree' and not all([math.log(t,2).is_integer() for t in tilesize]):
             raise IOError('Quadtree algorithm requires tile size to be a power of 2')
@@ -304,7 +318,7 @@ class GridMaker(GridProcessor):
         pool = mp.Pool(processes=cores)
         grid_tiles = [pool.apply_async(processor,
                                        args = ([iy, ix, nytiles, nxtiles],
-                                               bbox, cellsize, tilesize, 
+                                               bbox, cellsize, tilesize, xypos,
                                                mask, crs, interior,
                                                sort, trim, crop, None))
                         for iy in range(nytiles) for ix in range(nxtiles)]
