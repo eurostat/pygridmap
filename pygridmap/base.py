@@ -293,20 +293,21 @@ class GridProcessor():
         
     #/************************************************************************/
     @staticmethod
-    def get_pos_location(cellsize, bbox, pos='LLc', buffer=None, yreverse=True):
+    def get_pos_location(cellsize, bbox, pos=None, buffer=None, yreverse=True):
         # Return the location of the ['LLc','LRc','URc','ULc','CC'] of the grid cells
         height, width = cellsize
         buffy, buffx = buffer if buffer is not None else [0,0]
         xstart, ystart, xend, yend = map(sum, zip(bbox, [-buffx, -buffy, buffx, buffy]))
         xsize, ysize = xend - xstart, yend - ystart
-        # do nothing: if loc == 'LLc':   pass
-        if pos in ['LRc','URc']:
-            xstart =  xstart+width
-        if pos in ['ULc','URc']:
-            ystart = ystart+height #if yreverse is False else ystart-height
-        if pos in ['CC','centre']:
-            xstart = xstart+width/2
-            ystart = ystart+height/2 #if yreverse is False else ystart-height/2
+        if pos not in (None,'LLc'):
+            if pos in ['LRc','URc']:
+                xstart =  xstart+width
+            if pos in ['ULc','URc']:
+                ystart = ystart+height #if yreverse is False else ystart-height
+            if pos in ['CC','centre']:
+                xstart = xstart+width/2
+                ystart = ystart+height/2 #if yreverse is False else ystart-height/2
+        # elif loc == 'LLc':   pass # i.e.: do nothing
         if True: # this way, we also deal with non integer (height,width)
             idrows = [ystart + i*height for i in range(int(np.ceil(ysize/height)))] 
             idcols = [xstart + i*width for i in range(int(np.ceil(xsize/width)))] 
@@ -319,17 +320,18 @@ class GridProcessor():
 
     #/************************************************************************/
     @classmethod
-    def build_from_pos(cls, cellsize, idrows, idcols, pos='LLc'):
+    def build_from_pos(cls, cellsize, idrows, idcols, pos=None):
         # Return all unit cells of a regular grid as a list of boundin box polygons
         height, width = cellsize
-        # do nothing: if loc == 'LLc':   pass
-        if pos in ['LRc','URc']:
-            idcols = map(lambda x: x-width, idcols)
-        if pos in ['ULc','URc']:
-            idrows = map(lambda y: y-height, idrows)
-        if pos in ['CC','centre']:
-            idcols = map(lambda x: x-width/2, idcols)
-            idrows = map(lambda y: y-height/2, idrows)
+        if pos not in (None,'LLc'):
+            if pos in ['LRc','URc']:
+                idcols = map(lambda x: x-width, idcols)
+            if pos in ['ULc','URc']:
+                idrows = map(lambda y: y-height, idrows)
+            if pos in ['CC','centre']:
+                idcols = map(lambda x: x-width/2, idcols)
+                idrows = map(lambda y: y-height/2, idrows)
+        # elif loc == 'LLc':   pass # i.e.: do nothing
         polygrid = []
         [polygrid.append(cls.bbox_to_polygon(x, y, x+width, y+height)) 
          for x in idcols for y in idrows] # note the order: cols then rows
@@ -337,7 +339,7 @@ class GridProcessor():
     
     #/************************************************************************/
     @staticmethod
-    def align_pos_location(cellsize, bbox, loc, pos='LLc', maxsize=None):
+    def align_pos_location(cellsize, bbox, loc, pos=None, maxsize=None):
         # Return a bounding box for a regular grid that will encompass the provided 
         # bounding box and whose cells with given resolution will pass through the
         # given locations 
@@ -352,26 +354,30 @@ class GridProcessor():
                    loc[0], # + ceildist(bbox[2], loc[0], width) - width,
                    loc[1], # + ceildist(bbox[3], loc[1], height) - height
                   ]
-        if pos in ['LRc','URc']:
-            loc[0], loc[2] = loc[0] - width, loc[2] - width
-        if pos in ['ULc','URc']:
-            loc[1], loc[3] = loc[1] - height, loc[3] - height
-        if pos in ['CC','centre']:
-            loc[0], loc[2] = loc[0] - width/2, loc[2] - width/2
-            loc[1], loc[3] = loc[1] - height/2, loc[3] - height/2
+        if pos not in (None,'LLc'):
+            if pos in ['LRc','URc']:
+                loc[0], loc[2] = loc[0] - width, loc[2] - width
+            if pos in ['ULc','URc']:
+                loc[1], loc[3] = loc[1] - height, loc[3] - height
+            if pos in ['CC','centre']:
+                loc[0], loc[2] = loc[0] - width/2, loc[2] - width/2
+                loc[1], loc[3] = loc[1] - height/2, loc[3] - height/2
+        # elif loc == 'LLc':   pass # i.e.: do nothing
         xmax, ymax = max(bbox[2], loc[2]+maxsize), max(bbox[3], loc[3]+maxsize)
         loc_new = [loc[0]         if loc[0]<=bbox[0]  else loc[0]-ceildist(loc[0], bbox[0], width),
                    loc[1]         if loc[1]<=bbox[1]  else loc[1]-ceildist(loc[1], bbox[1], height),
                    loc[2]+maxsize if loc[2]>=bbox[2]  else loc[2]+ceildist(loc[2], xmax, width),
                    loc[3]+maxsize if loc[3]>=bbox[3]  else loc[3]+ceildist(loc[3], ymax, height)
                   ]
-        if pos in ['LRc','URc']:
-            loc_new[0], loc_new[2] = loc_new[0] + width, loc_new[2] + width
-        if pos in ['ULc','URc']:
-            loc_new[1], loc_new[3] = loc_new[1] + height, loc_new[3] + height
-        if pos in ['CC','centre']:
-            loc_new[0], loc_new[2] = loc_new[0] + width/2, loc_new[2] + width/2
-            loc_new[1], loc_new[3] = loc_new[1] + height/2, loc_new[3] + height/2
+        if pos not in (None,'LLc'):
+            if pos in ['LRc','URc']:
+                loc_new[0], loc_new[2] = loc_new[0] + width, loc_new[2] + width
+            if pos in ['ULc','URc']:
+                loc_new[1], loc_new[3] = loc_new[1] + height, loc_new[3] + height
+            if pos in ['CC','centre']:
+                loc_new[0], loc_new[2] = loc_new[0] + width/2, loc_new[2] + width/2
+                loc_new[1], loc_new[3] = loc_new[1] + height/2, loc_new[3] + height/2
+        # elif loc == 'LLc':   pass # i.e.: do nothing
         return loc_new
     
     #/************************************************************************/
