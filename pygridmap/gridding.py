@@ -23,6 +23,8 @@ Grid making operations.
 
 #%% Settings     
 
+from six import integer_types, string_types
+
 try:
     import pandas as pd
 except ImportError:
@@ -33,7 +35,6 @@ try:
 except ImportError:
     raise IOError("!!! Error importing geopandas - this package is required !!!")
         
-
 try:
     import multiprocessing as mp
     from queue import Empty
@@ -42,6 +43,10 @@ except:
 
 from pygridmap.base import FrameProcessor, GridProcessor#analysis:ignore
 from pygridmap.base import NPROCESSES, NCPUS
+
+DEFPROJ             = "EPSG:4326" # "EPSG:3035"
+"""Default projection for grid making.
+"""
 
 
 #%% Core functions/classes
@@ -246,8 +251,8 @@ class GridMaker(GridProcessor):
         return pd.concat(cells, axis=0, ignore_index=True)    
     
     #/************************************************************************/
-    def __call__(self, bbox, mask=None, crs="EPSG:4326", 
-                 interior=False, trim=True, crop=False, drop=False):
+    def __call__(self, bbox, mask = None, crs = DEFPROJ, interior = False, 
+                 trim = True, crop = False, drop = False):
         # check bounding box
         try:
             assert (isinstance(bbox, (tuple,list)) and all([np.isscalar(b) for b in bbox]))
@@ -256,18 +261,36 @@ class GridMaker(GridProcessor):
             try:
                 assert (len(bbox)==4 and bbox[0]<bbox[2] and bbox[1]<bbox[3])
             except: raise IOError("Grid bounding box parameter not recognised")
-        # check trimming flag
+        # check mask
         try:
-            assert isinstance(trim, bool)
-        except: raise TypeError("Wrong format for trimming flag")                  
+            assert (mask is None or isinstance(mask, (pd.DataFrame, gpd.GeoDataFrame)))
+        except: raise TypeError("Wrong format for mask data")	
+	if not isinstance(mask, gpd.GeoDataFrame): 
+            try:	# assuming there is a geometry
+		assert ("geometry" in mask.columns)
+	    except: raise IOError("Geometry of mask data not recognised")
+	    else:	
+		mask = gpd.GeoDataFrame(data = mask, crs = crs)	
+	# check crs flag
+        try:
+            assert isinstance(crs, (string_types, integer_types)) 
+        except: raise TypeError("Wrong format for projection")
+	if isinstance(crs, integer_types):
+            crs = str(crs) 
+        if not crs.startswith("EPSG"):
+            crs = "EPSG:%s" % crs 
         # check interior flag
         try:
             assert isinstance(interior, bool)
         except: raise TypeError("Wrong format for interior flag")
         if interior is True:
             trim = True # we force it
-        # check cropping flag
+        # check trimming flag
         try:
+            assert isinstance(trim, bool)
+        except: raise TypeError("Wrong format for trimming flag")                  
+        # check crop flag
+        try: # hardly used...
             assert isinstance(crop, bool)
         except: raise TypeError("Wrong format for cropping flag")   
         # check drop parameter
