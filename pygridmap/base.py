@@ -12,8 +12,7 @@ Base module enabling basic data processing and grid geoprocessing.
 
 **Dependencies**
 
-*require*:      :mod:`os`, :mod:`sys`, :mod:`itertools`, :mod:`functools`, :mod:`math`, :mod`time`,  
-                :mod:`numpy`, :mod:`pandas`, :mod:`geopandas`, :mod:`shapely`
+*require*:      :mod:`functools`, :mod:`numpy`, :mod:`pandas`, :mod:`geopandas`, :mod:`shapely`
 *optional*:     :mod:`dask`, :mod:`multiprocessing`
 
 **Contents**
@@ -24,11 +23,7 @@ Base module enabling basic data processing and grid geoprocessing.
 
 #%% Settings     
 
-import os, sys
-import requests
-import warnings
-import math, time
-import itertools, functools
+import  functools
 
 import json
 import numpy as np
