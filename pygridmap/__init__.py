@@ -10,7 +10,9 @@ Initialisation module of `pygridmap` package.
 """
 
 # *credits*:      `gjacopo <jacopo.grazzini@ec.europa.eu>`_ 
-# *since*:        Jun 2020
+# *since*:        June 2020
+
+from os import path as osp
 
 __THISFILE          = __file__ # useles...
 __THISDIR           = osp.dirname(__THISFILE)
