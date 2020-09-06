@@ -298,13 +298,18 @@ class GridProcessor():
         iy, ix = idx[:2]
         nygrid, nxgrid = tilesize
         xmin, ymin, xmax, ymax = bbox
-        bxmax, bymax = xmin + (ix+1) * nxgrid * width + buffx, ymin + (iy+1) * nygrid * height + buffy
+        bxmin, bymin = xmin + ix * nxgrid * width, ymin + iy * nygrid * height
+        bxmax, bymax = xmin + (ix+1) * nxgrid * width, ymin + (iy+1) * nygrid * height
         if crop is True:
-            bxmax, bymax = min(bxmax, xmax),  min(bymax, ymax)
-        return [xmin + ix * nxgrid * width - buffx, 
-                ymin + iy * nygrid * height - buffy, 
-                bxmax, 
-                bymax]
+            if bxmin > xmax or bymin > ymax:
+                return None
+            # elif bxmax > xmax or bymax > ymax:
+            #    bxmax, bymax = min(bxmax, xmax), min(bymax, ymax)
+            if bxmax > xmax:
+                bxmax = xmin + int((xmax - xmin - GridProcessor.TOL_EPS) / width +1) * width
+            if bymax > ymax:
+                bymax = ymin + int((ymax - ymin - GridProcessor.TOL_EPS) / height +1) * height
+        return [bxmin - buffx, bymin - buffy, bxmax + buffx, bymax + buffy]
         
     #/************************************************************************/
     @staticmethod
