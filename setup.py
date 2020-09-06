@@ -54,8 +54,8 @@ EXTRAS = {
     'geopy': 'geopy', 
     'geojson': 'geojson', 
     'pyproj': 'pyproj',
-    'dask': 'dask',
-    'gisco': 'happygisco'
+    # 'dask': 'dask',
+    # 'gisco': 'happygisco'
 }
 
 
@@ -70,11 +70,12 @@ except FileNotFoundError:
 
 # load the package's __version__.py module as a dictionary.
 about = {}
-if not VERSION:
+try:
+    assert (VERSION is None)
     with open(os.path.join(__THISDIR, PACKNAME, '__version__.py')) as f:
         exec(f.read(), about)
-else:
-    about['__version__'] = VERSION
+except (AssertionError, FileNotFoundError):
+    about['__version__'] = VERSION or 0.0.1
 
 
 #%%
