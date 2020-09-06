@@ -35,7 +35,5 @@ PACKPATH            = osp.dirname(__file__)
 """Path to this package.
 """
 
-__modules           = ['base', 'gridding', 'overlay']#analysis:ignore
-
-__all__             = ['%s%s' % (__,BASENAME) for __ in __modules]
+__all__             = ['base', 'gridding', 'overlay']#analysis:ignore
 __all__.extend(['__version__']) # , '__start__'
