@@ -109,8 +109,8 @@ class GridProcessor():
         # some dumb init
         self.__mode, self.__cores = None, 1
         self.__cell, self.__tile = None, None
- 	self.__xypos = None
-       # self.__sorted, self.__asc = None, None
+        self.__xypos = None
+        # self.__sorted, self.__asc = None, None
         # self.mode = kwargs.pop('mode', self.MODES[0])
         self.cores = kwargs.get('cores') or NPROCESSES
         self.cell = kwargs.get('cell')
