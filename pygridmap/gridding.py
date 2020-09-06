@@ -252,7 +252,7 @@ class GridMaker(GridProcessor):
     
     #/************************************************************************/
     def __call__(self, bbox, mask = None, crs = DEFPROJ, interior = False, 
-                 trim = True, crop = True, drop = False):
+                 trim = True, crop = False, drop = False):
         # check bounding box
         try:
             assert (isinstance(bbox, (tuple,list)) and all([np.isscalar(b) for b in bbox]))
