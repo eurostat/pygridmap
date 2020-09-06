@@ -43,10 +43,10 @@ REQUIRES_PYTHON = '>=3.6.0'
 
 # packages required for this module to be executed
 REQUIRED = [
-    'numpy', 'pandas', 'geopandas', 'shapely', 'multiprocessing'
+    'numpy', 'pandas', 'geopandas', 'shapely'
 ]
 # in Python standard library (see https://docs.python.org/3/library/):
-# 'collections', 'collections.abc', 'json', 'math', 
+# 'collections', 'collections.abc', 'json', 'math', 'multiprocessing',
 # 'inspect', 'operator', 'functools', 'itertools'
 
 # optional packages
