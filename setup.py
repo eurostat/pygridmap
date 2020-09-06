@@ -54,7 +54,7 @@ EXTRAS = {
     'geopy': 'geopy', 
     'geojson': 'geojson', 
     'pyproj': 'pyproj',
-    'dask': 'dask'
+    'dask': 'dask',
     'gisco': 'happygisco'
 }
 
