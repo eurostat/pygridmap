@@ -75,7 +75,7 @@ try:
     with open(os.path.join(__THISDIR, PACKNAME, '__version__.py')) as f:
         exec(f.read(), about)
 except (AssertionError, FileNotFoundError):
-    about['__version__'] = VERSION or 0.0.1
+    about['__version__'] = VERSION or "0.0.1"
 
 
 #%%
