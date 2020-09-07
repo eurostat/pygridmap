@@ -43,7 +43,7 @@ try:
 except: 
     pass
 
-from pygridmap.base import FrameProcessor, GridProcessor#analysis:ignore
+from pygridmap.base import GridProcessor
 from pygridmap.base import NPROCESSES, NCPUS
 
 DEFPROJ             = "EPSG:4326" # "EPSG:3035"
