@@ -25,6 +25,7 @@ Grid making operations.
 
 from six import integer_types, string_types
 
+import math
 import numpy as np
 
 try:
