@@ -25,6 +25,8 @@ Grid making operations.
 
 from six import integer_types, string_types
 
+import numpy as np
+
 try:
     import pandas as pd
 except ImportError:
