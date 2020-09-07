@@ -24,11 +24,34 @@ The package `pygridmap` supports the following methods/algorithms:
 <!-- ![bounding boxes](docs/BE_overlay.png)-->
 <table align="center"> <tr> <td align="center" width="300px"> <img src="docs/BE_overlay.png"></img></td></tr> </table>
 
-**Quick install and start**
+**Quick install**
+
+The `pygridmap` package can be installed using `pip`:
+```python
+>>> pip install pygridmap
+```
+If you wish to use the latest available version from _github_:
+```python
+>>> pip install git+https://github.com/eurostat/pygridmap.git
+```
+
+**Quick launch**
+
+You can run (and update to your convenience) the test/example notebooks distributed with the `pygridmap` package in the [tests/](tests) folder, namely:
+* [base.ipynb](https://nbviewer.jupyter.org/github/eurostat/pygridmap/blob/master/tests/base.ipynb) for basic data handling operations [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/eurostat/pygridmap/blob/master/tests/base.ipynb),
+* [gridding.ipynb](https://nbviewer.jupyter.org/github/eurostat/pygridmap/blob/master/tests/gridding.ipynb) for regular grid making [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/eurostat/pygridmap/blob/master/tests/gridding.ipynb),
+* [overlay.ipynb](https://nbviewer.jupyter.org/github/eurostat/pygridmap/blob/master/tests/overlay.ipynb) for overlay/overlap, merging, intersection and union operations [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/eurostat/pygridmap/blob/master/tests/overlay.ipynb).
 
 **Usage**
 
 *In your `Python` script*
+
+The following classes are available: 
+```python
+>>> from pygridmap.base import FrameProcessor, GridProcessor
+>>> from pygridmap.gridding import GridMaker
+>>> from pygridmap.overlay import GridOverlay
+```
 
 *Through the `bash` command*
 
