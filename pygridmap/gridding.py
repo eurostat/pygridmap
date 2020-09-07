@@ -265,17 +265,17 @@ class GridMaker(GridProcessor):
         try:
             assert (mask is None or isinstance(mask, (pd.DataFrame, gpd.GeoDataFrame)))
         except: raise TypeError("Wrong format for mask data")	
-	if not isinstance(mask, gpd.GeoDataFrame): 
-            try:	# assuming there is a geometry
-		assert ("geometry" in mask.columns)
-	    except: raise IOError("Geometry of mask data not recognised")
-	    else:	
-		mask = gpd.GeoDataFrame(data = mask, crs = crs)	
-	# check crs flag
+        if not isinstance(mask, gpd.GeoDataFrame): 
+            try: # assuming there is a geometry
+                assert ("geometry" in mask.columns)
+            except: raise IOError("Geometry of mask data not recognised")
+            else:
+                mask = gpd.GeoDataFrame(data = mask, crs = crs)	
+        # check crs flag
         try:
             assert isinstance(crs, (string_types, integer_types)) 
         except: raise TypeError("Wrong format for projection")
-	if isinstance(crs, integer_types):
+        if isinstance(crs, integer_types):
             crs = str(crs) 
         if not crs.startswith("EPSG"):
             crs = "EPSG:%s" % crs 
