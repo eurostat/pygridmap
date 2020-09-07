@@ -307,7 +307,7 @@ class GridMaker(GridProcessor):
         # settings
         cellsize, tilesize = self.cell, self.tile
         sort = self.sorted
-	xypos = self.xypos
+        xypos = self.xypos
         # verify processing mode
         if self.mode == 'qtree' and not all([math.log(t,2).is_integer() for t in tilesize]):
             raise IOError('Quadtree algorithm requires tile size to be a power of 2')
@@ -351,4 +351,3 @@ class GridMaker(GridProcessor):
 
 
 #%% Main for binary usage
-		
