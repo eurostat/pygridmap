@@ -69,7 +69,7 @@ class GridOverlay(GridProcessor):
     COL_GRIDX, COL_POLIDX = '__gridx__', '__polidx__'
     COL_AREA, COL_PCT = '__area__', '__area_pct__'
     
-	NAN = np.nan if True else 0 #?
+    NAN = np.nan if True else 0 #?
  
     #/************************************************************************/
     def __init__(self, **kwargs):
@@ -491,4 +491,4 @@ class GridOverlay(GridProcessor):
         return gpd.GeoDataFrame(overlayed, crs = grid.crs)
 
 
-#%% Main for binary usage		
+#%% Main for binary usage
