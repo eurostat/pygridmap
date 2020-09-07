@@ -12,7 +12,8 @@ Base module enabling basic data processing and grid geoprocessing.
 
 **Dependencies**
 
-*require*:      :mod:`functools`, :mod:`numpy`, :mod:`pandas`, :mod:`geopandas`, :mod:`shapely`
+*require*:      :mod:`math`, :mod:`functools`, :mod:`numpy`, :mod:`pandas`, :mod:`geopandas`, :mod:`shapely`
+
 *optional*:     :mod:`dask`, :mod:`multiprocessing`
 
 **Contents**
@@ -26,6 +27,7 @@ Base module enabling basic data processing and grid geoprocessing.
 import  functools
 
 import json
+import math
 import numpy as np
 
 try:
