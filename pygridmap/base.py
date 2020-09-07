@@ -103,6 +103,8 @@ class GridProcessor():
     MODES = ['prll', 'seq']
     SORTS = ['rc', 'cr']
     XYPOS = ['LLc', 'LRc',' URc', 'ULc', 'CC', 'centre']
+
+    TOL_EPS = 1e-14 # -6
     
     #/************************************************************************/
     def __init__(self, **kwargs):
