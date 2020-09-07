@@ -221,7 +221,7 @@ class GridOverlay(GridProcessor):
         sidx2 = list(sindex2.intersection(bbox1))
         # checking whether the geometries actually overlap/intersect, otherwise return the polyarea1
         if sidx2 == []:
-            return polyarea1 if preserve_polygon is True else None
+            return gridarea1 if preserve_polygon is True else None
         # 5. clip / subset the polygons in polygon2 that intersect
         if cls.COL_POLIDX not in polygon2.columns:
             clipped2 = (polygon2.iloc[sidx2]
