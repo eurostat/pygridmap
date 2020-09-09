@@ -254,13 +254,18 @@ class GridMaker(GridProcessor):
         return pd.concat(cells, axis=0, ignore_index=True)    
     
     #/************************************************************************/
-    def __call__(self, bbox, mask = None, crs = DEFPROJ, interior = False, 
+    def __call__(self, bbox = None, mask = None, crs = DEFPROJ, interior = False, 
                  trim = True, crop = False, drop = False):
+        # check that data are actually parsed...
+        try:
+            assert not (bbox is None and mask is None)
+        except: raise TypeError("No input data parsed: bbox or mask need to be informed")
         # check bounding box
         try:
-            assert (isinstance(bbox, (tuple,list)) and all([np.isscalar(b) for b in bbox]))
+            assert (bbox is None or 
+                    (isinstance(bbox, (tuple,list)) and all([np.isscalar(b) for b in bbox])))
         except: raise TypeError("Wrong format for grid bounds parameter")
-        else:
+        if isinstance(bbox, (tuple,list)):
             try:
                 assert (len(bbox)==4 and bbox[0]<bbox[2] and bbox[1]<bbox[3])
             except: raise IOError("Grid bounding box parameter not recognised")
@@ -273,7 +278,10 @@ class GridMaker(GridProcessor):
                 assert ("geometry" in mask.columns)
             except: raise IOError("Geometry of mask data not recognised")
             else:
-                mask = gpd.GeoDataFrame(data = mask, crs = crs)	
+                mask = gpd.GeoDataFrame(data = mask, crs = crs)
+        # update bbox
+        if bbox is None:
+            bbox = mask.total_bounds.tolist()
         # check crs flag
         try:
             assert isinstance(crs, (string_types, integer_types)) 
