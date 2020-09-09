@@ -9,7 +9,7 @@ The `pygridmap` package enable you to perform some basic geometric/set operation
 **Description**
 
 The package `pygridmap` supports the following methods/algorithms: 
-* basic [**geometric/set operations and geoprocessing**] over geospatial grid (_e.g._, bounding box manipulations, locations definition, _etc_...) with the [`GridProcessor`](pygridmap/base.py) class,
+* basic [**vector data handling**](https://saylordotorg.github.io/text_essentials-of-geographic-information-systems/s11-geospatial-analysis-i-vector-o.html) over geospatial grid (_e.g._, bounding box manipulations, locations definition, _etc_...) with the [`GridProcessor`](pygridmap/base.py) class,
 <!-- ![bounding boxes](docs/bbox_manipulation.png)-->
 <table align="center"> <tr> <td align="center" width="750px"> <img src="docs/bbox_manipulation.png"></img></td></tr> </table>
 
@@ -20,7 +20,7 @@ The package `pygridmap` supports the following methods/algorithms:
         <td align="center" width="300px"> <img src="docs/BE_interior_gridding.png"></img></td>
 </tr> </table>
 
-* customised [**vector overlay operations**](https://docs.qgis.org/3.10/en/docs/user_manual/processing_algs/qgis/vectoroverlay.html) (_e.g._, intersection, union, overlay/overlap and merging) between any polygon layer and a geospatial grid ("regular" or not) with the [`Gridoverlay`](pygridmap/overlay.py) class.
+* customised [**vector overlay operations**](https://docs.qgis.org/3.10/en/docs/user_manual/processing_algs/qgis/vectoroverlay.html) (_e.g._, intersection, union, overlay/overlap and merging) between any polygon layer and a geospatial grid ("regular" or not) with the [`Gridoverlay`](pygridmap/overlay.py) class, including weighted areal interpolation.
 <!-- ![bounding boxes](docs/BE_overlay.png)-->
 <table align="center"> <tr> <td align="center" width="300px"> <img src="docs/BE_overlay.png"></img></td></tr> </table>
 
@@ -81,15 +81,22 @@ They also
     <tr> <td align="left"><i>license</i></td> <td align="left"><a href="https://joinup.ec.europa.eu/sites/default/files/eupl1.1.-licence-en_0.pdfEUPL">EUPL</a> </td> </tr> 
 </table>
 
-**<a name="Resources"></a>Resources**
+**<a name="Requirements"></a>Requirements**
 
 * Data handling: [`numpy`](https://numpy.org/) and [`pandas`](http://pandas.pydata.org).
 * Geospatial data processing: [`geopandas`](http://geopandas.org), [`fiona`](https://fiona.readthedocs.io/en/latest/manual.html), [shapely](https://pypi.org/project/Shapely/), [`RTree`](https://toblerity.org/rtree/), [`geopy`](https://github.com/geopy/geopy) and [`pyproj`](https://github.com/pyproj4/pyproj).
 * Map visualisations: [`ipyleaflet`](https://github.com/jupyter-widgets/ipyleaflet) or [`folium`](https://github.com/python-visualization/folium).
-* See also projects [python-geospatial](https://github.com/giswqs/python-geospatial), a collection of `Python` packages for geospatial analysis, and earthdatascience, a repository of `Python` [tutorials](https://www.earthdatascience.org/tutorials/python/) and [workshop](https://www.earthdatascience.org/workshops/gis-open-source-python/).
+
+**<a name="Resources"></a>Other resources**
+
+* Project [python-geospatial](https://github.com/giswqs/python-geospatial), a collection of `Python` packages for geospatial analysis, and earthdatascience, a repository of `Python` [tutorials](https://www.earthdatascience.org/tutorials/python/) and [workshop](https://www.earthdatascience.org/workshops/gis-open-source-python/).
+* Library [`pysal`](https://github.com/pysal/pysal) for geospatial data science with an emphasis on geospatial vector data.
+* Package [`tobler`](https://github.com/pysal/tobler) for an alternative implementation of areal interpolation (module [`area_weighted`](https://github.com/pysal/tobler/tree/master/tobler/area_weighted)), as well as dasymetric mapping, and change of support.
+* Software [`GridMaker`](https://github.com/eurostat/GridMaker) for alternative grid maker. 
 
 **<a name="References"></a>References**
 
+* Gimond, M. (2019): [**Intro to GIS and Spatial Analysis**](https://mgimond.github.io/Spatial/index.html).
 * Lovelace R., Nowosad J. and Muenchow J. (2019): [**Geocomputation with R**](https://geocompr.robinlovelace.net/), _Chapman & Hall/CRC_.
 * de Smith M.J., Goodchild M.F. and Longley P.A. (2018): [**Geospatial Analysis: A Comprehensive Guide to Principles, Techniques and Software Tools**](https://www.spatialanalysisonline.com/HTML/index.html), _The Winchelsea Press_. 
 * Garrard C. (2016): **Geoprocessing with Python**, _Manning Publications_.
@@ -97,3 +104,4 @@ They also
 * Bahgat K. (2016): **Python Geospatial Development Essentials**, _PACKT Publishing_.
 * Lawed J. (2015): [**QGIS Python Programming CookBook**](https://www.programmer-books.com/wp-content/uploads/2019/05/QGIS-Python-Programming-Cookbook.pdf), _PACKT Publishing_.
 * Kresse W. and Danko D.M., eds. (2012): **Handbook of Geographic Information**, _Springer_, doi: [10.1007/978-3-540-72680-7](https://doi.org/10.1007/978-3-540-72680-7).
+*  Campbell J. and Shin M. (2011): [**Essentials of Geographic Information Systems**](https://saylordotorg.github.io/text_essentials-of-geographic-information-systems/index.html) ([pdf](https://resources.saylor.org/wwwresources/archived/site/textbooks/Essentials%20of%20Geographic%20Information%20Systems.pdf)), _Saylor Academy Open Textbooks_.
