@@ -97,7 +97,7 @@ They also
 **<a name="References"></a>References**
 
 * Gimond, M. (2019): [**Intro to GIS and Spatial Analysis**](https://mgimond.github.io/Spatial/index.html).
-* Lovelace R., Nowosad J. and Muenchow J. (2019): [**Geocomputation with R**](https://geocompr.robinlovelace.net/), _Chapman & Hall/CRC_.
+<!-- * Lovelace R., Nowosad J. and Muenchow J. (2019): [**Geocomputation with R**](https://geocompr.robinlovelace.net/), _Chapman & Hall/CRC_. -->
 * de Smith M.J., Goodchild M.F. and Longley P.A. (2018): [**Geospatial Analysis: A Comprehensive Guide to Principles, Techniques and Software Tools**](https://www.spatialanalysisonline.com/HTML/index.html), _The Winchelsea Press_. 
 * Garrard C. (2016): **Geoprocessing with Python**, _Manning Publications_.
 * Westra E. (2016): [**Python Geospatial Development**](https://www.programmer-books.com/wp-content/uploads/2019/04/Python-Geospatial-Development-3rd-Edition.pdf), _PACKT Publishing_.
