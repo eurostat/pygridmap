@@ -113,7 +113,6 @@ class GridProcessor():
         # some dumb init
         self.__mode, self.__cores = None, 1
         self.__cell, self.__tile = None, None
-        self.__xypos = None
         # self.__sorted, self.__asc = None, None
         # self.mode = kwargs.pop('mode', self.MODES[0])
         self.cores = kwargs.get('cores') or NPROCESSES
@@ -144,19 +143,6 @@ class GridProcessor():
                 or (isinstance(cell, (tuple,list)) and all([isinstance(c,int) for c in cell])))
         except: raise TypeError("Wrong format for cell size parameter")
         self.__cell = [cell, cell] if np.isscalar(cell) else cell
-       
-    #/************************************************************************/
-    @property
-    def xypos(self):
-        return self.__xypos
-    @xypos.setter
-    def xypos(self, xypos):        
-        try:
-            assert (xypos is None or xypos in self.XYPOS)
-        except: raise TypeError("Wrong format for (Y,Y) coordinates location in the grid cell")
-        if xypos is None:
-            xypos = 'LLc'
-        self.__xypos = xypos
             
     #/************************************************************************/
     @property
