@@ -304,7 +304,7 @@ class GridProcessor():
         buffy, buffx = buffer if buffer is not None else [0,0]
         xstart, ystart, xend, yend = map(sum, zip(bbox, [-buffx, -buffy, buffx, buffy]))
         xsize, ysize = xend - xstart, yend - ystart
-        # if loc == 'LLc':   pass # i.e.: do nothing
+        # if xypos == 'LLc':   pass # i.e.: do nothing
         if xypos in ['LRc','URc']:
             xstart =  xstart + width
         if xypos in ['ULc','URc']:
