@@ -163,8 +163,8 @@ class GridMaker(GridProcessor):
             wans = tile.within(mask).tolist()[0] and 1 # note that wans = 1 => ians = 1
             ians = 1 if wans in (True,1) else tile.intersects(mask).tolist()[0]
         if ians in (True, 1):
-            rows, cols = cls.get_pos_location(cellsize, tilebbox, pos = xypos)
-            tile = gpd.GeoDataFrame({'geometry': cls.build_from_pos(cellsize, rows, cols),
+            rows, cols = cls.get_pos_location(cellsize, tilebbox, xypos = xypos)
+            tile = gpd.GeoDataFrame({'geometry': cls.build_from_pos(cellsize, rows, cols, xypos = xypos),
                                      cls.COL_X: [x for x in cols for y in rows],
                                      cls.COL_Y: [y for x in cols for y in rows]
                                     }, 
@@ -235,8 +235,8 @@ class GridMaker(GridProcessor):
                     if ians in (True,1) and wans in (True,1):
                         break
             if wans in (True,1):
-                rows, cols  = cls.get_pos_location(cellsize, bbox, pos = xypos)
-                tile = gpd.GeoDataFrame({'geometry': cls.build_from_pos(cellsize, rows, cols),
+                rows, cols  = cls.get_pos_location(cellsize, bbox, xypos = xypos)
+                tile = gpd.GeoDataFrame({'geometry': cls.build_from_pos(cellsize, rows, cols, xypos = xypos),
                                          cls.COL_X: [x for x in cols for y in rows],
                                          cls.COL_Y: [y for x in cols for y in rows],
                                         }, 
