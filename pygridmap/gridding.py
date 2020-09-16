@@ -285,7 +285,7 @@ class GridMaker(GridProcessor):
             except: raise IOError("Grid bounding box parameter not recognised")
         # check mask
         try:
-            assert (mask is None or isinstance(mask, (bool, pd.DataFrame, gpd.GeoDataFrame)))
+            assert (mask is None or isinstance(mask, (bool, pd.DataFrame, gpd.GeoSeries, gpd.GeoDataFrame)))
         except: raise TypeError("Wrong format for mask data")	
         if isinstance(mask, pd.DataFrame): 
             try: # assuming there is a geometry
