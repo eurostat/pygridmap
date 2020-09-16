@@ -181,7 +181,7 @@ class GridProcessor():
 
     #/************************************************************************/
     @staticmethod
-    def get_bbox(grid, polygons, gridbbox=True):
+    def get_bbox(grid, polygons, gridbbox = True):
         if gridbbox is True:
             return grid.total_bounds.tolist()
         elif grid.crs == polygons.crs:
@@ -191,7 +191,7 @@ class GridProcessor():
         
     #/************************************************************************/
     @staticmethod
-    def get_grid_shape(cellsize, bbox, buffer=None):
+    def get_grid_shape(cellsize, bbox, buffer = None):
         # Return the 'shape' of the grid covering the bounding box, i.e. the (y,x) number of unit cells 
         # in the grid
         height, width = cellsize
@@ -202,7 +202,7 @@ class GridProcessor():
     
     #/************************************************************************/
     @staticmethod
-    def set_tile_shape(ntiles, gridshape=None):
+    def set_tile_shape(ntiles, gridshape = None):
         n = math.sqrt(ntiles)
         if gridshape is not None:
             nrows, ncols = gridshape
@@ -217,7 +217,7 @@ class GridProcessor():
 
     #/************************************************************************/
     @staticmethod
-    def get_tile_shape(cellsize, tilesize, bbox, buffer=None):
+    def get_tile_shape(cellsize, tilesize, bbox, buffer = None):
         # Return the (x,y) shape/dimension (in # of tiles) of the tiling (made of unit cells of given size) 
         # covering the desired bounding box
         height, width = cellsize
@@ -231,7 +231,7 @@ class GridProcessor():
 
     #/************************************************************************/
     @staticmethod
-    def get_tile_size(cellsize, tileshape, bbox, buffer=None):
+    def get_tile_size(cellsize, tileshape, bbox, buffer = None):
         # Return the (x,y) size (in # of unit cells of given size) of the tiling (with given shape) 
         # covering the desired bounding box
         height, width = cellsize
@@ -244,7 +244,7 @@ class GridProcessor():
     
     #/************************************************************************/
     @staticmethod
-    def bbox_to_polygon(west, south, east, north, density=False, buffer=False):
+    def bbox_to_polygon(west, south, east, north, density = False, buffer = False):
         # Return a polygon geometry given by the bounding box coordinates
         if density is True:     density = 10
         elif density is False:  density = 1
@@ -264,7 +264,7 @@ class GridProcessor():
     #/************************************************************************/
     @classmethod
     def bbox_to_geoframe(cls, west, south, east, north, 
-                         density=False, buffer=False, crs=None):
+                         density = False, buffer = False, crs = None):
         bbox = gpd.GeoDataFrame(index=[0], 
                                 geometry=[cls.bbox_to_polygon(west, south, east, north, 
                                                               density = density, buffer = buffer)
@@ -276,7 +276,7 @@ class GridProcessor():
             
     #/************************************************************************/
     @staticmethod
-    def get_tile_bbox(idx, cellsize, tilesize, bbox, crop, buffer=None):
+    def get_tile_bbox(idx, cellsize, tilesize, bbox, crop, buffer = None):
         # Return the bounding box of a tile for a given index
         height, width = cellsize
         buffy, buffx = buffer if buffer is not None else [0,0]
@@ -298,20 +298,20 @@ class GridProcessor():
         
     #/************************************************************************/
     @staticmethod
-    def get_pos_location(cellsize, bbox, pos='LLc', buffer=None, yreverse=True):
+    def get_pos_location(cellsize, bbox, xypos = 'LLc', buffer = None, yreverse = True):
         # Return the location of the ['LLc','LRc','URc','ULc','CC'] of the grid cells
         height, width = cellsize
         buffy, buffx = buffer if buffer is not None else [0,0]
         xstart, ystart, xend, yend = map(sum, zip(bbox, [-buffx, -buffy, buffx, buffy]))
         xsize, ysize = xend - xstart, yend - ystart
         # if loc == 'LLc':   pass # i.e.: do nothing
-        if pos in ['LRc','URc']:
-            xstart =  xstart+width
-        if pos in ['ULc','URc']:
-            ystart = ystart+height #if yreverse is False else ystart-height
-        if pos in ['CC','centre']:
-            xstart = xstart+width/2
-            ystart = ystart+height/2 #if yreverse is False else ystart-height/2
+        if xypos in ['LRc','URc']:
+            xstart =  xstart + width
+        if xypos in ['ULc','URc']:
+            ystart = ystart + height #if yreverse is False else ystart-height
+        if xypos in ['CC','centre']:
+            xstart = xstart + width/2
+            ystart = ystart + height/2 #if yreverse is False else ystart-height/2
         if True: # this way, we also deal with non integer (height,width)
             idrows = [ystart + i*height for i in range(int(np.ceil(ysize/height)))] 
             idcols = [xstart + i*width for i in range(int(np.ceil(xsize/width)))] 
@@ -324,15 +324,15 @@ class GridProcessor():
 
     #/************************************************************************/
     @classmethod
-    def build_from_pos(cls, cellsize, idrows, idcols, pos='LLc'):
+    def build_from_pos(cls, cellsize, idrows, idcols, xypos = 'LLc'):
         # Return all unit cells of a regular grid as a list of boundin box polygons
         height, width = cellsize
-        # if loc == 'LLc':   pass # i.e.: do nothing
-        if pos in ['LRc','URc']:
+        # if xypos == 'LLc':   pass # i.e.: do nothing
+        if xypos in ['LRc','URc']:
             idcols = map(lambda x: x-width, idcols)
-        if pos in ['ULc','URc']:
+        if xypos in ['ULc','URc']:
             idrows = map(lambda y: y-height, idrows)
-        if pos in ['CC','centre']:
+        if xypos in ['CC','centre']:
             idcols = map(lambda x: x-width/2, idcols)
             idrows = map(lambda y: y-height/2, idrows)
         polygrid = []
@@ -342,7 +342,7 @@ class GridProcessor():
     
     #/************************************************************************/
     @staticmethod
-    def align_pos_location(cellsize, bbox, loc, pos='LLc', maxsize=None):
+    def align_pos_location(cellsize, bbox, loc, xypos = 'LLc', maxsize = None):
         # Return a bounding box for a regular grid that will encompass the provided 
         # bounding box and whose cells with given resolution will pass through the
         # given locations 
@@ -357,12 +357,12 @@ class GridProcessor():
                    loc[0], # + ceildist(bbox[2], loc[0], width) - width,
                    loc[1], # + ceildist(bbox[3], loc[1], height) - height
                   ]
-        # if loc == 'LLc':   pass # i.e.: do nothing
-        if pos in ['LRc','URc']:
+        # if xypos == 'LLc':   pass # i.e.: do nothing
+        if xypos in ['LRc','URc']:
             loc[0], loc[2] = loc[0] - width, loc[2] - width
-        if pos in ['ULc','URc']:
+        if xypos in ['ULc','URc']:
             loc[1], loc[3] = loc[1] - height, loc[3] - height
-        if pos in ['CC','centre']:
+        if xypos in ['CC','centre']:
             loc[0], loc[2] = loc[0] - width/2, loc[2] - width/2
             loc[1], loc[3] = loc[1] - height/2, loc[3] - height/2
         xmax, ymax = max(bbox[2], loc[2]+maxsize), max(bbox[3], loc[3]+maxsize)
@@ -371,12 +371,12 @@ class GridProcessor():
                    loc[2]+maxsize if loc[2]>=bbox[2]  else loc[2]+ceildist(loc[2], xmax, width),
                    loc[3]+maxsize if loc[3]>=bbox[3]  else loc[3]+ceildist(loc[3], ymax, height)
                   ]
-        # if loc == 'LLc':   pass # i.e.: do nothing
-        if pos in ['LRc','URc']:
+        # if xypos == 'LLc':   pass # i.e.: do nothing
+        if xypos in ['LRc','URc']:
             loc_new[0], loc_new[2] = loc_new[0] + width, loc_new[2] + width
-        if pos in ['ULc','URc']:
+        if xypos in ['ULc','URc']:
             loc_new[1], loc_new[3] = loc_new[1] + height, loc_new[3] + height
-        if pos in ['CC','centre']:
+        if xypos in ['CC','centre']:
             loc_new[0], loc_new[2] = loc_new[0] + width/2, loc_new[2] + width/2
             loc_new[1], loc_new[3] = loc_new[1] + height/2, loc_new[3] + height/2
         return loc_new
