@@ -287,7 +287,7 @@ class GridProcessor():
         buffy, buffx = buffer if buffer is not None else [0,0]
         nytile, nxtile = tileshape # tileshape = #tiles
         xmin, ymin, xmax, ymax = bbox
-        nrows, ncols = int(np.ceil((yma - ymin + 2*buffy) / height)), int(np.ceil((xmax - xmin + 2*buffx) / width)) 
+        nrows, ncols = int(np.ceil((ymax - ymin + 2*buffy) / height)), int(np.ceil((xmax - xmin + 2*buffx) / width)) 
         return [int(np.ceil(nrows / nytile)), int(np.ceil(ncols / nxtile))] # = #{cells in a tile}
             
     #/************************************************************************/
