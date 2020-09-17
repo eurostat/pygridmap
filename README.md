@@ -69,8 +69,8 @@ These implementations are probably not optimal since they are wrappers to the [`
 
 On areal interpolation, the package `tobler` that comes with the [`pysal`](https://github.com/pysal) library enables to perform more generic operations (*i.e.*, not only considering grid as a target layer). The current implementation provides however with a multiprocessing approach. Whenever considering a regular grid `target_grid` as the target vector layer to interpolate an extensive feature `attribute` from the `source` data, the following command:
 ```python
->>> from pygridmap import gridding
->>> estimate = gridding.area_interpolate(source, target_grid, attribute) 
+>>> from pygridmap import overlay
+>>> estimate = overlay.area_interpolate(source, target_grid, attribute) 
 ```
 is equivalent to running:
 ```python
