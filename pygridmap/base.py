@@ -265,7 +265,7 @@ class GridProcessor():
     #/************************************************************************/
     @staticmethod
     def get_tile_shape(cellsize, tilesize, bbox, buffer = None):
-        # Return the (x,y) shape/dimension (in # of tiles) of the tiling (made of unit cells of given size) 
+        # Return the (x,y) shape/dimension (in # of tiles) of the tiling (made of unit bins of given size) 
         # covering the desired bounding box
         height, width = [1, 1] if cellsize is None else cellsize
         nygrid, nxgrid = tilesize
@@ -279,11 +279,11 @@ class GridProcessor():
     #/************************************************************************/
     @staticmethod
     def get_tile_size(cellsize, tileshape, bbox, buffer = None):
-        # Return the (x,y) size (in # of unit cells of given size) of the tiling (with given shape) 
-        # covering the desired bounding box
-        if cellsize is None: 
-            return None
-        height, width = cellsize
+        # Given the shape of the tiling (in #tiles) and the bounding box that it covers, return the 
+        # "size" of the tiling defined as:
+        #   * the actual size (in measure unit, e.g. meters) of the tiles when cellsize is None, or
+        #   * the (x,y) size (in # of unit cells of given size) of the tiles otherwise.
+        height, width = [1, 1] if cellsize is None else cellsize
         buffy, buffx = buffer if buffer is not None else [0,0]
         nytile, nxtile = tileshape # tileshape = #tiles
         xmin, ymin, xmax, ymax = bbox
