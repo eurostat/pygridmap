@@ -363,7 +363,7 @@ class GridOverlay(GridProcessor):
         # define the overlay (e.g., how_overlay=intersection or union) geometries of both the polygons
         # and the subgrid
         return cls.process_split_tile(polygons, subgrid, 
-                                      area, cover, columns, rule, how_overlay, 
+                                      area, cover, rule, columns, how_overlay, 
                                       keep_geom_type, preserve_polygon)
       
     #/************************************************************************/
