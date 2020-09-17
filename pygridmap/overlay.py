@@ -174,7 +174,7 @@ class GridOverlay(GridProcessor):
             tilebbox = cls.bbox_to_polygon (xmin, ymin, xmax, ymax)
             # retrieve the indexes of the grid cells within the considered tile
             if cellsize is None:
-                index = list(grid.sindex.intersection(tilebbox))
+                index = list(grid.sindex.intersection([xmin, ymin, xmax, ymax]))
             elif cls.COL_X in grid.columns and cls.COL_Y in grid.columns:
                 index = grid[(grid[cls.COL_X] >= xmin) & (grid[cls.COL_X]  <= xmax) \
                             & (grid[cls.COL_Y] >= ymin)  & (grid[cls.COL_Y] <= ymax)].index
