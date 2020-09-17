@@ -170,85 +170,46 @@ class GridProcessor():
         if sort is True:              
             sort = self.SORTS[0]
         self.__sorted = sort
+
+    #/************************************************************************/
+    @staticsmethod
+    def check_ref_proj(gdf1, gdf2):
+        try:
+            assert (isinstance(gdf1, (gpd.GeoDataFrame, gpd.GeoSeries)) \
+                    and isinstance(gdf2, (gpd.GeoDataFrame, gpd.GeoSeries)))
+        except:
+            raise TypeError('Wrong type for input datasets')
+        return gdf1.crs == gdf2.crs
     
     #/************************************************************************/
     @staticmethod
-    def set_ref_proj(grid, polygons):
-        if grid.crs == polygons.crs:
-            return polygons
+    def set_ref_proj(gdf1, gdf2):
+        if GridProcessor.check_ref_proj(gdf1, gdf2) is True:
+            return gdf2
         else:
-            return polygons.to_crs(grid.crs)
+            return gdf2.to_crs(gdf1.crs)
 
     #/************************************************************************/
     @staticmethod
-    def get_bbox(grid, polygons, gridbbox = True):
-        if gridbbox is True:
-            return grid.total_bounds.tolist()
-        elif grid.crs == polygons.crs:
-            return polygons.unary_union.union(grid.unary_union).envelope.bounds 
+    def get_bbox(gdf1, gdf2, bbox = True):
+        if bbox is True:
+            return gdf1.total_bounds.tolist()
+        #return ((gdf2 if GridProcessor.check_ref_proj(gdf1, polygons) is True else gdf2.to_crs(gdf1.crs))
+        #        .unary_union
+        #        .union(gdf1.unary_union)
+        #        .envelope.bounds)
+        elif GridProcessor.check_ref_proj(gdf1, polygons) is True:
+            return gdf2.unary_union.union(gdf1.unary_union).envelope.bounds 
         else:
-            return polygons.to_crs(grid.crs).unary_union.union(grid.unary_union).envelope.bounds
-        
-    #/************************************************************************/
-    @staticmethod
-    def get_grid_shape(cellsize, bbox, buffer = None):
-        # Return the 'shape' of the grid covering the bounding box, i.e. the (y,x) number of unit cells 
-        # in the grid
-        height, width = cellsize
-        buffy, buffx = buffer if buffer is not None else [0,0]
-        xmin, ymin, xmax, ymax = bbox
-        return [int(np.ceil((ymax-ymin+2*buffy)/height)), 
-                int(np.ceil((xmax-xmin+2*buffx)/width))]  
-    
-    #/************************************************************************/
-    @staticmethod
-    def set_tile_shape(ntiles, gridshape = None):
-        n = math.sqrt(ntiles)
-        if gridshape is not None:
-            nrows, ncols = gridshape
-            ratio = max(nrows,ncols) / min(nrows, ncols)
-        else: # dumb allocations
-            nrows = ncols = ratio = 1
-        nf, nc = int(np.floor(n/ratio)), int(np.ceil(n*ratio))
-        if nf*nc>=ntiles: 
-            return [nf, nc] if nrows >= ncols else [nc, nf]
-        else: 
-            return [nf+1, nc] if nrows >= ncols else [nc, nf+1]
-
-    #/************************************************************************/
-    @staticmethod
-    def get_tile_shape(cellsize, tilesize, bbox, buffer = None):
-        # Return the (x,y) shape/dimension (in # of tiles) of the tiling (made of unit cells of given size) 
-        # covering the desired bounding box
-        height, width = cellsize
-        buffy, buffx = buffer if buffer is not None else [0,0]
-        nygrid, nxgrid = tilesize
-        # nrows, ncols = GridMaker.get_grid_shape(cellsize, bbox)
-        xmin, ymin, xmax, ymax = bbox
-        nrows, ncols = int(np.ceil((ymax-ymin+2*buffy)/height)), int(np.ceil((xmax-xmin+2*buffx)/width))  # grid shape
-        return [int(np.ceil(nrows / nygrid)), 
-                int(np.ceil(ncols / nxgrid))] # = #{tiles covering the grid}
-
-    #/************************************************************************/
-    @staticmethod
-    def get_tile_size(cellsize, tileshape, bbox, buffer = None):
-        # Return the (x,y) size (in # of unit cells of given size) of the tiling (with given shape) 
-        # covering the desired bounding box
-        height, width = cellsize
-        buffy, buffx = buffer if buffer is not None else [0,0]
-        nytile, nxtile = tileshape # tileshape = #tiles
-        xmin, ymin, xmax, ymax = bbox
-        nrows, ncols = int(np.ceil((ymax-ymin+2*buffy)/height)), int(np.ceil((xmax-xmin+2*buffx)/width)) # grid shape
-        return [int(np.ceil(nrows / nytile)), 
-                int(np.ceil(ncols / nxtile))] # = #{cells in a tile}
+            return gdf2.to_crs(gdf1.crs).unary_union.union(gdf1.unary_union).envelope.bounds
     
     #/************************************************************************/
     @staticmethod
     def bbox_to_polygon(west, south, east, north, density = False, buffer = False):
         # Return a polygon geometry given by the bounding box coordinates
-        if density is True:     density = 10
-        elif density is False:  density = 1
-        elif density == 0:      density = 1
+        if density is True:     density = 10 # default
+        elif density is False:  density = 1 # do nothing
+        elif density <= 0:      density = 1 # still do nothing
         poly = []
         poly.extend([(w, south) 
                      for w in [west + i * np.floor((east - west) / density) for i in range(density)]])
@@ -265,22 +226,76 @@ class GridProcessor():
     @classmethod
     def bbox_to_geoframe(cls, west, south, east, north, 
                          density = False, buffer = False, crs = None):
-        bbox = gpd.GeoDataFrame(index=[0], 
-                                geometry=[cls.bbox_to_polygon(west, south, east, north, 
-                                                              density = density, buffer = buffer)
-                                         ]
+        bbox = gpd.GeoDataFrame(index = [0], 
+                                geometry = [cls.bbox_to_polygon(west, south, east, north, 
+                                                                density = density, 
+                                                                buffer = buffer)
+                                           ]
                                )
         if crs is not None:
             bbox.crs = crs
         return bbox
+        
+    #/************************************************************************/
+    @staticmethod
+    def get_grid_shape(cellsize, bbox, buffer = None):
+        # Return the 'shape' of the regular grid covering the bounding box, i.e. the (y,x) number of unit 
+        # cells in the grid
+        height, width = cellsize
+        buffy, buffx = buffer if buffer is not None else [0,0]
+        xmin, ymin, xmax, ymax = bbox
+        return [int(np.ceil((ymax - ymin + 2*buffy) / height)), 
+                int(np.ceil((xmax - xmin + 2*buffx) / width))]  
+    
+    #/************************************************************************/
+    @staticmethod
+    def set_tile_shape(ntiles, gridshape = None):
+        n = math.sqrt(ntiles)
+        if gridshape is not None:
+            nrows, ncols = gridshape
+            ratio = max(nrows,ncols) / min(nrows, ncols)
+        else: # dumb allocations
+            nrows = ncols = ratio = 1
+        nf, nc = int(np.floor(n/ratio)), int(np.ceil(n * ratio))
+        if nf*nc>=ntiles: 
+            return [nf, nc] if nrows >= ncols else [nc, nf]
+        else: 
+            return [nf+1, nc] if nrows >= ncols else [nc, nf+1]
+
+    #/************************************************************************/
+    @staticmethod
+    def get_tile_shape(cellsize, tilesize, bbox, buffer = None):
+        # Return the (x,y) shape/dimension (in # of tiles) of the tiling (made of unit cells of given size) 
+        # covering the desired bounding box
+        height, width = [1, 1] if cellsize is None else cellsize
+        nygrid, nxgrid = tilesize
+        # nrows, ncols = GridProcessor.get_grid_shape(cellsize, bbox)
+        xmin, ymin, xmax, ymax = bbox
+        buffy, buffx = buffer if buffer is not None else [0,0]
+        # define the grid shape (nrows, ncols)
+        nrows, ncols = int(np.ceil((ymax - ymin + 2*buffy) / height)), int(np.ceil((xmax - xmin + 2*buffx) / width)) 
+        return [int(np.ceil(nrows / nygrid)), int(np.ceil(ncols / nxgrid))] # = #{tiles covering the grid}
+
+    #/************************************************************************/
+    @staticmethod
+    def get_tile_size(cellsize, tileshape, bbox, buffer = None):
+        # Return the (x,y) size (in # of unit cells of given size) of the tiling (with given shape) 
+        # covering the desired bounding box
+        if cellsize is None: 
+            return None
+        height, width = cellsize
+        buffy, buffx = buffer if buffer is not None else [0,0]
+        nytile, nxtile = tileshape # tileshape = #tiles
+        xmin, ymin, xmax, ymax = bbox
+        nrows, ncols = int(np.ceil((yma - ymin + 2*buffy) / height)), int(np.ceil((xmax - xmin + 2*buffx) / width)) 
+        return [int(np.ceil(nrows / nytile)), int(np.ceil(ncols / nxtile))] # = #{cells in a tile}
             
     #/************************************************************************/
     @staticmethod
     def get_tile_bbox(idx, cellsize, tilesize, bbox, crop, buffer = None):
         # Return the bounding box of a tile for a given index
-        height, width = cellsize
-        buffy, buffx = buffer if buffer is not None else [0,0]
         iy, ix = idx[:2]
+        height, width = [1, 1] if cellsize is None else cellsize
         nygrid, nxgrid = tilesize
         xmin, ymin, xmax, ymax = bbox
         bxmin, bymin = xmin + ix * nxgrid * width, ymin + iy * nygrid * height
@@ -294,6 +309,7 @@ class GridProcessor():
                 bxmax = xmin + int((xmax - xmin - GridProcessor.TOL_EPS) / width +1) * width
             if bymax > ymax:
                 bymax = ymin + int((ymax - ymin - GridProcessor.TOL_EPS) / height +1) * height
+        buffy, buffx = buffer if buffer is not None else [0,0]
         return [bxmin - buffx, bymin - buffy, bxmax + buffx, bymax + buffy]
         
     #/************************************************************************/
@@ -313,8 +329,8 @@ class GridProcessor():
             xstart = xstart + width/2
             ystart = ystart + height/2 #if yreverse is False else ystart-height/2
         if True: # this way, we also deal with non integer (height,width)
-            idrows = [ystart + i*height for i in range(int(np.ceil(ysize/height)))] 
-            idcols = [xstart + i*width for i in range(int(np.ceil(xsize/width)))] 
+            idrows = [ystart + i * height for i in range(int(np.ceil(ysize / height)))] 
+            idcols = [xstart + i * width for i in range(int(np.ceil(xsize / width)))] 
         else:
             idrows = list(range(int(np.floor(ystart)), int(np.ceil(yend)), height))
             idcols = list(range(int(np.floor(xstart)), int(np.ceil(xend)), width))
@@ -325,7 +341,7 @@ class GridProcessor():
     #/************************************************************************/
     @classmethod
     def build_from_pos(cls, cellsize, idrows, idcols, xypos = 'LLc'):
-        # Return all unit cells of a regular grid as a list of boundin box polygons
+        # Return all unit cells of a regular grid as a list of bounding box polygons
         height, width = cellsize
         # if xypos == 'LLc':   pass # i.e.: do nothing
         if xypos in ['LRc','URc']:
@@ -336,7 +352,7 @@ class GridProcessor():
             idcols = map(lambda x: x-width/2, idcols)
             idrows = map(lambda y: y-height/2, idrows)
         polygrid = []
-        [polygrid.append(cls.bbox_to_polygon(x, y, x+width, y+height)) 
+        [polygrid.append(cls.bbox_to_polygon(x, y, x + width, y + height)) 
          for x in idcols for y in idrows] # note the order: cols then rows
         return polygrid
     
@@ -441,6 +457,12 @@ class GridProcessor():
         # number of other geometries. The type of the returned object depends on the type 
         # of the input geomety (bounding box or polygon)
         crs = kwargs.pop('crs', None)
+        try:
+            assert (geom is None or isinstance(geom, (tuple,list)) \
+                    or isinstance(geom, (gpd.GeoDataFrame, gpd.GeoSeries, 
+                                         geometry.Polygon, geometry.MultiPolygon)))
+        except:
+            raise TypeError('Wrong type for input geometry')
         def _union_bbox(bbox, other):
             if isinstance(other, (gpd.GeoDataFrame,gpd.GeoSeries)):
                 other = other.total_bounds.tolist()
@@ -472,6 +494,6 @@ class GridProcessor():
                 return geom
         return functools.reduce(_union_bbox if isinstance(geom, (tuple,list)) else _union_polygon, 
                                 [geom, *args])    
-
+        
 
 #%% Main for binary usage
