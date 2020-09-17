@@ -487,5 +487,30 @@ class GridOverlay(GridProcessor):
             overlayed.drop(columns = list(drop), axis = 1, inplace = True, errors = 'ignore')
         return gpd.GeoDataFrame(overlayed, crs = grid.crs)
 
+    
+#==============================================================================
+# Method area_interpolate
+#==============================================================================
+
+def area_interpolate(source, target_grid, extensive_variables, 
+                     cell = None, tile = 1, cores = 1, memory_split = False):
+    """Areal interpolation.
+    
+    Running:
+    
+        >>> from pygridmap import gridding
+        >>> estimate = gridding.area_interpolate(source, target, extensive_variables) 
+
+    is equivalent to:
+    
+        >>> from tobler import area_weighted
+        >>> estimate = area_weighted.area_interpolate(source, target, extensive_variables = extensive_variables)
+
+    where the target layer `target` is a regular grid. 
+    """
+    proc = GridOverlay(how = 'intersection', cell = cell, cores = cores, tile = tile)
+    return proc(source, target_grid, rule = 'sum', columns = extensive_variables, 
+                memory_split = memory_split, area = True, cover = True, drop = True)
+
 
 #%% Main for binary usage
