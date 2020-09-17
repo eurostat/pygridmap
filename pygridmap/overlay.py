@@ -159,7 +159,7 @@ class GridOverlay(GridProcessor):
     #/************************************************************************/
     @classmethod
     def crop_grid_from_tile(cls, idx, grid, gridbbox, cellsize, tilesize,
-                            sorted_, preserve_tile=False):
+                            sorted_, preserve_tile = False):
         iy, ix = idx[:2]
         tilebbox = None
         # create a single tile object for clipping
@@ -445,6 +445,8 @@ class GridOverlay(GridProcessor):
             #             .rename(columns={'index': self.COL_POLIDX})
             #            ) 
             polygons[self.COL_POLIDX] = polygons.index.copy()
+        if self.cores * nytiles * nxtiles == 1:
+            memory_split = False
         if memory_split is True:
             overlay_tile = []
             for ix in ixtiles:
@@ -480,7 +482,7 @@ class GridOverlay(GridProcessor):
             if drop is True:
                 drop = [self.COL_TILE, self.COL_INTERSECTS, self.COL_WITHIN, self.COL_POLIDX] #__drops
                 drop.extend(polygons.columns.tolist())
-            if area is True: # we keep the cover indexing column
+            if area is True: # we keep the area calculation columns
                 drop = set(drop).difference({self.COL_AREA, self.COL_PCT})
             if cover is True: # we keep the cover indexing column
                 drop = set(drop).difference({self.COL_POLIDX})
