@@ -499,7 +499,7 @@ def area_interpolate(source, target_grid, extensive_variables,
     Running:
     
         >>> from pygridmap import overlay
-        >>> estimate = gridding.area_interpolate(source, target, extensive_variables) 
+        >>> estimate = overlay.area_interpolate(source, target, extensive_variables) 
 
     is equivalent to:
     
