@@ -172,7 +172,7 @@ class GridProcessor():
         self.__sorted = sort
 
     #/************************************************************************/
-    @staticsmethod
+    @staticmethod
     def check_ref_proj(gdf1, gdf2):
         try:
             assert (isinstance(gdf1, (gpd.GeoDataFrame, gpd.GeoSeries)) \
