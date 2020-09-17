@@ -169,11 +169,13 @@ class GridOverlay(GridProcessor):
             if tilesize not in grid.columns:
                 raise IOError('tile column name not found')
             index = grid[grid[tilesize] == iy].index
-        elif cellsize is not None:
+        else:
             xmin, ymin, xmax, ymax = cls.get_tile_bbox(idx, cellsize, tilesize, gridbbox, False) # no crop
             tilebbox = cls.bbox_to_polygon (xmin, ymin, xmax, ymax)
             # retrieve the indexes of the grid cells within the considered tile
-            if cls.COL_X in grid.columns and cls.COL_Y in grid.columns:
+            if cellsize is None:
+                index = list(grid.sindex.intersection(tilebbox))
+            elif cls.COL_X in grid.columns and cls.COL_Y in grid.columns:
                 index = grid[(grid[cls.COL_X] >= xmin) & (grid[cls.COL_X]  <= xmax) \
                             & (grid[cls.COL_Y] >= ymin)  & (grid[cls.COL_Y] <= ymax)].index
             elif sorted_ not in (False, None):
@@ -187,12 +189,11 @@ class GridOverlay(GridProcessor):
             elif True:
                 bbox = tilebbox.buffer(-min(cellsize)*1e-2).bounds
                 index = list(grid.sindex.intersection(bbox))
-            else:
+            else: # forget about this one
                 geometry = tilebbox.buffer(0).geometry
-                clip_bbox = gpd.GeoDataFrame(geometry = [geometry], 
-                                             crs = grid.crs)
+                clip_bbox = gpd.GeoDataFrame(geometry = [geometry], crs = grid.crs)
                 # buffer to solve inconsistent geometries
-                return gpd.clip(grid, clip_bbox, keep_geom_type=True).buffer(0) 
+                return gpd.clip(grid, clip_bbox, keep_geom_type = True).buffer(0) 
         if index is None or index is []:
             return tilebbox if preserve_tile is True else None
         crop_grid = (grid
@@ -417,22 +418,16 @@ class GridOverlay(GridProcessor):
         # settings
         cellsize, tilesize = self.cell, self.tile or 1
         # defining the grid dimensions
-        gridbbox = self.get_bbox(grid, polygons, gridbbox=True)
+        gridbbox = self.get_bbox(grid, polygons, bbox = True)
         if isinstance(tilesize, str):
             iytiles, ixtiles = list(set(grid[tilesize].values)), [0]
             nytiles, nxtiles = len(iytiles), 1
         elif np.isscalar(tilesize): # or isinstance(tilesize, (tuple,list)) and len(tilesize)==1
-            tileshape = self.set_tile_shape(tilesize)
-            if cellsize is not None:
-                tilesize = self.get_tile_size(cellsize, tileshape, gridbbox)
-            else:
-                tilesize = None
+            tileshape = self.set_tile_shape(tilesize) # define the (x,y) #tiles
+            tilesize = self.get_tile_size(cellsize, tileshape, gridbbox) # get the tile size, in #cells or measure
         elif isinstance(tilesize, (tuple,list)):
-            if cellsize is not None:
-                tileshape = self.get_tile_shape(cellsize, tilesize, gridbbox)
-                # tilesize: unchanged
-            else:
-                tileshape, tilesize = tilesize, None
+            tileshape = self.get_tile_shape(cellsize, tilesize, gridbbox)
+            # if cellsize is None: tileshape, tilesize = tilesize, None
         if not isinstance(tilesize, str):
             nytiles, nxtiles = tileshape
             iytiles, ixtiles = list(range(nytiles)), list(range(nxtiles))
