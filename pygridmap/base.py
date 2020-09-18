@@ -220,7 +220,7 @@ class GridProcessor():
         poly.extend([(west, n)  
                      for n in [north - i * np.floor((north - south) / density) for i in range(density)]])
         poly = geometry.Polygon(poly)
-        buffer = 0 if buffer is True else buffer # GridProcessor.TOL_EPS
+        buffer = 0 if buffer is False else (GridProcessor.TOL_EPS if buffer is True else buffer)
         return poly if buffer in (None,False) else poly.buffer(buffer)
  
     #/************************************************************************/
