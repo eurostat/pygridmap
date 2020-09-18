@@ -4,7 +4,7 @@
 """
 .. _overlay
 
-Grid making operations.
+Overlay set operations.
 
 **Dependencies**
 
