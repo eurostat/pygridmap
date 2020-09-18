@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-.. _gridding
+.. _overlay
 
 Grid making operations.
 
@@ -36,14 +36,21 @@ except ImportError:
     raise IOError("!!! Error importing geopandas - this package is required !!!") 
 
 try:
+    import shapely
+except ImportError:
+    raise IOError("!!! Error importing shapely - this package is required  !!!")
+else:
+    from shapely import geometry, ops
+
+try:
     import multiprocessing as mp
     from queue import Empty
 except: 
     pass
 
 from pygridmap.base import FrameProcessor, GridProcessor#analysis:ignore
-from pygridmap.gridding import GridMaker
 from pygridmap.base import NPROCESSES, NCPUS
+from pygridmap.gridding import GridMaker
 
 #%% Core functions/classes
 
@@ -74,13 +81,15 @@ class GridOverlay(GridProcessor):
     #/************************************************************************/
     def __init__(self, **kwargs):
         self.__mode, self.__how = None, None
+        self.__buff_geom_prec = True
         self.__keep_geom_type, self.__preserve_polygon = True, False
         super(GridOverlay,self).__init__(**kwargs)
         self.mode = 'prll' # kwargs.pop('mode', 'prll') # ignored
         self.how = kwargs.pop('how', 'intersection') # self.HOWS[0]
+        self.buff_geom_prec = kwargs.pop('buff_geom_prec', True)
         self.keep_geom_type = kwargs.pop('keep_geom_type', True)
         self.preserve_polygon = kwargs.pop('preserve_polygon', False)
-        
+       
     #/************************************************************************/
     @property
     def mode(self):
@@ -133,6 +142,25 @@ class GridOverlay(GridProcessor):
         
     #/************************************************************************/
     @property
+    def buff_geom_prec(self):
+        return self.__buff_geom_prec
+    @buff_geom_prec.setter
+    def buff_geom_prec(self, buffer):        
+        try:
+            assert (buffer is None or isinstance(buffer, bool) or np.isscalar(buffer))
+        except: raise TypeError("Wrong format for buff_geom_prec parameter")
+        if buffer is True:
+            buffer = GridProcessor.TOL_EPS
+        elif buffer is False:
+            buffer = 0
+        elif buffer is None:
+            buffer = -1 # avoid running it
+        elif np.isscalar(buffer) and buffer <0:
+            raise IOError("Wrong value for buff_geom_prec parameter, must be >0")
+        self.__buff_geom_prec = buffer
+        
+    #/************************************************************************/
+    @property
     def asc(self):
         return self.__asc
     @asc.setter
@@ -158,9 +186,10 @@ class GridOverlay(GridProcessor):
     
     #/************************************************************************/
     @classmethod
-    def crop_grid_from_tile(cls, idx, grid, gridbbox, cellsize, tilesize,
-                            sorted_, preserve_tile = False):
+    def crop_grid_tile(cls, idx, grid, gridbbox, cellsize, tilesize, sorted_, 
+                       buff_geom_prec = None, preserve_tile = False):
         iy, ix = idx[:2]
+        buff_geom_prec = buff_geom_prec or GridProcessor.TOL_EPS # or 0?
         tilebbox = None
         # create a single tile object for clipping
         if tilesize is True: 
@@ -187,13 +216,13 @@ class GridOverlay(GridProcessor):
                 # index = [(ix*nxgrid + i)*nrows + (iy*nygrid + j) for j in range(nygrid) for i in range(nxgrid)]
                 index = [ind for ind in index if ind<=nrows*ncols - 1]
             elif True:
-                bbox = tilebbox.buffer(-min(cellsize)*1e-2).bounds
+                bbox = tilebbox.buffer(-min(cellsize) * buff_geom_prec).bounds
                 index = list(grid.sindex.intersection(bbox))
             else: # forget about this one
-                geometry = tilebbox.buffer(0).geometry
+                geometry = tilebbox.buffer(buff_geom_prec).geometry
                 clip_bbox = gpd.GeoDataFrame(geometry = [geometry], crs = grid.crs)
                 # buffer to solve inconsistent geometries
-                return gpd.clip(grid, clip_bbox, keep_geom_type = True).buffer(0) 
+                return gpd.clip(grid, clip_bbox, keep_geom_type = True)
         if index is None or index is []:
             return tilebbox if preserve_tile is True else None
         crop_grid = (grid
@@ -205,8 +234,9 @@ class GridOverlay(GridProcessor):
     
     #/************************************************************************/
     @classmethod
-    def geometry_overlay(cls, gridarea1, polygon2, how_overlay,
-                         keep_geom_type = True, preserve_polygon = False): 
+    def geometry_overlay(cls, gridarea1, polygon2, how_overlay, 
+                         buff_geom_prec = None, keep_geom_type = True, preserve_polygon = False): 
+        buff_geom_prec = buff_geom_prec or GridProcessor.TOL_EPS # or 0?
         # Perform set/geometric intersection/union operations (how_overlay) of a grid (gridarea1)
         # and a model/polygon layer (polygon2) at tile level
         # 1. build the dissolved version of the polyarea2 (e.g. "merge" the grid geometries into a subgrid)
@@ -249,10 +279,21 @@ class GridOverlay(GridProcessor):
         # 6. when not empty, retrieve the (geometrical) union/intersection of the subgrid with the 
         # clipped polygons
         # see overlay implementation at https://github.com/geopandas/geopandas/blob/master/geopandas/tools/overlay.py
-        return gpd.overlay(gridarea1, clipped2, how_overlay, 
-                           keep_geom_type = keep_geom_type, # True,
-                           make_valid = True)
-        # return gpd.overlay(clipped2, gridarea1, how_overlay, keep_geom_type = True, make_valid = True)
+        try:
+            return gpd.overlay(gridarea1, clipped2, how_overlay, 
+                               keep_geom_type = keep_geom_type, make_valid = True)
+            # return gpd.overlay(clipped2, gridarea1, how_overlay, keep_geom_type = keep_geom_type, make_valid = True)
+        except: # catching pygeos.GEOSException, e.g. TopologyException when a line is crossing another line
+            # and no intermediate coordinate records the intersection or by intersecting line segments which
+            # are nearly parallel - see GIS stackexchange: https://gis.stackexchange.com/questions/
+            #   217789/geopandas-shapely-spatial-difference-topologyexception-no-outgoing-diredge-f
+            gridarea1.geometry = gridarea1.geometry.map(ops.unary_union)
+            clipped2.geometry = clipped2.geometry.map(ops.unary_union)
+            if buff_geom_prec > 0:
+                gridarea1.geometry = gridarea1.geometry.buffer(buff_geom_prec)
+                clipped2.geometry = clipped2.geometry.buffer(buff_geom_prec)
+            return gpd.overlay(gridarea1, clipped2, how_overlay, 
+                               keep_geom_type = keep_geom_type, make_valid = True)
     
     #/************************************************************************/
     @classmethod
@@ -323,7 +364,7 @@ class GridOverlay(GridProcessor):
     @classmethod
     def process_split_tile(cls, polygons, subgrid, 
                            area, cover, rule, columns, how_overlay,
-                           keep_geom_type, preserve_polygon):
+                           buff_geom_prec, keep_geom_type, preserve_polygon):
         # define the subgrid over the specific tile considered for processing
         if columns not in (None,[]): 
             # and (intercols:=set(columns).intersection(set(subgrid.columns))) != set()):
@@ -331,7 +372,9 @@ class GridOverlay(GridProcessor):
         # define the geometric overlay (e.g., how_overlay=intersection or union) of both the subgrid 
         # and the polygon representation
         overlay = cls.geometry_overlay(subgrid, polygons, how_overlay, 
-                                       keep_geom_type, preserve_polygon)
+                                       buff_geom_prec = buff_geom_prec, 
+                                       keep_geom_type = keep_geom_type, 
+                                       preserve_polygon = preserve_polygon)
         if overlay is None or overlay.is_empty.all():
             return None
         # udpate the attributes available in the overlay geometries to take into account the proportional 
@@ -354,18 +397,17 @@ class GridOverlay(GridProcessor):
     @classmethod
     def process_tile(cls, idx, polygons, grid, gridbbox, cellsize, tilesize,
                      area, cover, rule, columns, how_overlay, 
-                     keep_geom_type, sorted_, preserve_polygon):
+                     sorted_, buff_geom_prec, keep_geom_type, preserve_polygon):
         # define the subgrid over the specific tile considered for processing
-        subgrid = cls.crop_grid_from_tile(idx, grid, gridbbox,
-                                          cellsize, tilesize,  
-                                          sorted_) 
+        subgrid = cls.crop_grid_tile(idx, grid, gridbbox, cellsize, tilesize, sorted_, 
+                                     buff_geom_prec = buff_geom_prec, preserve_tile = False) 
         if subgrid is None or subgrid.is_empty.all():
             return None        
         # define the overlay (e.g., how_overlay=intersection or union) geometries of both the polygons
         # and the subgrid
         return cls.process_split_tile(polygons, subgrid, 
                                       area, cover, rule, columns, how_overlay, 
-                                      keep_geom_type, preserve_polygon)
+                                      buff_geom_prec, keep_geom_type, preserve_polygon)
       
     #/************************************************************************/
     def __call__(self, polygons, grid, 
@@ -443,35 +485,33 @@ class GridOverlay(GridProcessor):
         if self.cores * nytiles * nxtiles == 1:
             memory_split = False
         if memory_split is True:
-            overlay_tile = []
+            olay_tile = []
             for ix in ixtiles:
                 for iy in iytiles:
-                    subgrid = self.crop_grid_from_tile([iy, ix, nytiles, nxtiles], 
-                                                       grid, gridbbox, cellsize, tilesize,  
-                                                       self.sorted) 
+                    subgrid = self.crop_grid_tile([iy, ix, nytiles, nxtiles], 
+                                                  grid, gridbbox, cellsize, tilesize,  
+                                                  self.sorted, preserve_tile = False) 
                     if subgrid is None or subgrid.is_empty.all():
                         continue        
-                    overlay_tile.append(pool.apply_async(self.process_split_tile,
-                                                         args = (polygons, subgrid, 
-                                                                 area, cover, rule, columns, 
-                                                                 self.how, self.keep_geom_type, 
-                                                                 self.preserve_polygon
-                                                                ))
-                                       )
+                    olay_tile.append(pool.apply_async(self.process_split_tile,
+                                                      args = (polygons, subgrid, 
+                                                              area, cover, rule, columns, self.how, 
+                                                              self.buff_geom_prec,
+                                                              self.keep_geom_type, self.preserve_polygon
+                                                             ))
+                                    )
         else:
-            overlay_tile = [pool.apply_async(self.process_tile,
+            olay_tile = [pool.apply_async(self.process_tile,
                                              args = ([iy, ix, nytiles, nxtiles], 
-                                                     polygons, grid, gridbbox, 
-                                                     cellsize, tilesize, 
-                                                     area, cover, rule, columns,
-                                                     self.how, self.keep_geom_type,
-                                                     self.sorted, 
-                                                     self.preserve_polygon
+                                                     polygons, grid, gridbbox, cellsize, tilesize, 
+                                                     area, cover, rule, columns, self.how, 
+                                                     self.sorted, self.buff_geom_prec,
+                                                     self.keep_geom_type, self.preserve_polygon
                                                     ))    
                             for iy in iytiles for ix in ixtiles]       
         pool.close()
         pool.join()
-        overlayed = pd.concat([t.get() for t in overlay_tile if t is not None], 
+        olay = pd.concat([t.get() for t in olay_tile if t is not None], 
                          axis=0, ignore_index=True)
         if drop != False: 
             if drop is True:
@@ -484,8 +524,8 @@ class GridOverlay(GridProcessor):
             if rule is not None: # we keep still keep those, otherwise there was no point!
                 drop = set(drop).difference(set(columns))
             drop = set(drop).difference({self.COL_GRIDX, 'geometry'}) # don't drop those two!!!
-            overlayed.drop(columns = list(drop), axis = 1, inplace = True, errors = 'ignore')
-        return gpd.GeoDataFrame(overlayed, crs = grid.crs)
+            olay.drop(columns = list(drop), axis = 1, inplace = True, errors = 'ignore')
+        return gpd.GeoDataFrame(olay, crs = grid.crs)
 
     
 #==============================================================================
@@ -498,8 +538,8 @@ def area_interpolate(source, target_grid, extensive_variables,
     
     Running:
     
-        >>> from pygridmap import overlay
-        >>> estimate = overlay.area_interpolate(source, target, extensive_variables) 
+        >>> from pygridmap import gridding
+        >>> estimate = gridding.area_interpolate(source, target, extensive_variables) 
 
     is equivalent to:
     
