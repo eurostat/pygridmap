@@ -108,7 +108,7 @@ class GridMaker(GridProcessor):
             assert (xypos is None or xypos in self.XYPOS)
         except: raise TypeError("Wrong format for (Y,Y) coordinates location in the grid cell")
         if xypos is None:
-            xypos = 'LLc'
+            xypos = self.XYPOS[0] # arbitrary default choice: 'LLc'
         self.__xypos = xypos
     
     #/************************************************************************/
