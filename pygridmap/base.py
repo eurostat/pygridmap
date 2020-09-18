@@ -106,7 +106,7 @@ class GridProcessor():
     SORTS = ['rc', 'cr']
     XYPOS = ['LLc', 'LRc',' URc', 'ULc', 'CC', 'centre']
 
-    TOL_EPS = 1e-14 # -6
+    TOL_EPS = 1e-5 # 1e-14 
     
     #/************************************************************************/
     def __init__(self, **kwargs):
@@ -205,7 +205,7 @@ class GridProcessor():
     
     #/************************************************************************/
     @staticmethod
-    def bbox_to_polygon(west, south, east, north, density = False, buffer = False):
+    def bbox_to_polygon(west, south, east, north, density = False, buffer = None):
         # Return a polygon geometry given by the bounding box coordinates
         if density is True:     density = 10 # default
         elif density is False:  density = 1 # do nothing
@@ -220,7 +220,8 @@ class GridProcessor():
         poly.extend([(west, n)  
                      for n in [north - i * np.floor((north - south) / density) for i in range(density)]])
         poly = geometry.Polygon(poly)
-        return poly if buffer is False else poly.buffer(0)
+        buffer = 0 if buffer is True else buffer # GridProcessor.TOL_EPS
+        return poly if buffer in (None,False) else poly.buffer(buffer)
  
     #/************************************************************************/
     @classmethod
