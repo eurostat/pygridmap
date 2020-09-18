@@ -57,6 +57,8 @@ The following classes are available:
 
 **Notes**
 
+*Processing* 
+
 The implementation of the methods above adopts (customised, using the [`multiprocessing`](https://docs.python.org/3/library/multiprocessing.html) module) multitprocessor tiling processing together with (native) vector processing whenever possible in order to take advantage of multiprocessor compute capabilities. Note  that the [`FrameProcessor`](pygridmap/base.py) class can be used to run embarassing parallel calculations on dataframe rows.
 <!-- ![tile processing](docs/BE_tile_processing.png)-->
 <table align="center"> <tr> <td align="center" width="300px"> <img src="docs/BE_tile_processing.png"></img></td> </tr> </table>
@@ -67,16 +69,20 @@ Geometric operations are making an extensive use of the geometric/geospatial `Py
   
 These implementations are probably not optimal since they are wrappers to the [`GEOS`](https://trac.osgeo.org/geos/) library, itself a port of the Java Topology Suite ([`JTS`](https://projects.eclipse.org/projects/locationtech.jts)), similarly to what is used in QGis.
 
-On areal interpolation, the package `tobler` that comes with the [`pysal`](https://github.com/pysal) library enables to perform more generic operations (*i.e.*, not only considering grid as a target layer). The current implementation provides however with a multiprocessing approach. Whenever considering a regular grid `target_grid` as the target vector layer to interpolate an extensive feature `attribute` from the `source` data, the following command:
+*Algorithm*
+
+On areal interpolation, the package `tobler` that comes with the [`pysal`](https://github.com/pysal) library enables to perform more generic operations (*i.e.*, not only considering grid as a target layer). Whenever one needs to  project/interpolate an extensive feature `attribute` from a `source` vector layer onto a `target` vector layer (*e.g.*, a regular grid), the following command:
 ```python
 >>> from pygridmap import overlay
->>> estimate = overlay.area_interpolate(source, target_grid, attribute) 
+>>> estimate = overlay.area_interpolate(source, target, attribute) 
 ```
 is equivalent to running:
 ```python
 >>> from tobler import area_weighted
- >>> estimate = area_weighted.area_interpolate(source, target_grid, extensive_variables = attribute)
+ >>> estimate = area_weighted.area_interpolate(source, target, extensive_variables = attribute)
 ```
+
+With respect to the latter implementation, the current algorithm supports a tile-based multicore approach for the interpolation (through the setting of the `tile` parameter). The `tobler` algorithm will however help you "project" intensive variables as well.
 
 **About**
 
