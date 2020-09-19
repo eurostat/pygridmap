@@ -60,7 +60,7 @@ DEFPROJ             = "EPSG:4326" # "EPSG:3035"
 
 class GridMaker(GridProcessor):
     
-    MODES = ['prll', 'seq', 'qtree']
+    MODES = ['prll', 'seq', 'qtree'] # overide GridProcessor.MODES
     SORTS = ['tile', 'tilerc', 'tilecr', 'rc', 'cr']
     
     COL_X, COL_Y = '__x__', '__y__'
