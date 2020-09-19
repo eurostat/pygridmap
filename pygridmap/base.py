@@ -113,10 +113,12 @@ class GridProcessor():
         # some dumb init
         self.__mode, self.__processor, self.__cores = None, None, None
         self.__cell, self.__tile = None, None
+        self.__buffer = None
         self.__sorted = None
         # self.mode = kwargs.pop('mode', self.MODES[0])
         self.cores = kwargs.get('cores')
         self.cell, self.tile = kwargs.get('cell'), kwargs.get('tile')
+        self.buffer = kwargs.pop('buffer', True)
         self.sorted = kwargs.pop('sorted', False)
        
     #/************************************************************************/
@@ -161,6 +163,31 @@ class GridProcessor():
         except:
             pass
         self.__tile = tile
+    
+    #/************************************************************************/
+    @property
+    def buffer(self):
+        return self.__buffer 
+    @buffer.setter
+    def buffer(self, buffer):
+        try:
+            assert (buffer is None or isinstance(buffer, bool) or np.isscalar(buffer)
+                   or (isinstance(buffer, (list,tuple)) and len(buffer)==2))
+        except: raise TypeError("Wrong format for buffer parameter")  
+        if isinstance(buffer, (list,tuple)):
+            if not all(np.isscalar(b) for b in buffer):
+                raise TypeError("Wrong format for buffer list of parameters")
+            elif not all(b >= 0 for b in buffer):
+                raise IOError("Wrong value for buffer list of parameters, must be >0")
+        elif np.isscalar(buffer) and buffer  < 0:
+            raise IOError("Wrong value for buffer parameter, must be >0")
+        elif buffer is True:
+            buffer = self.TOL_EPS # GridProcessor.TOL_EPS
+        elif buffer is False:
+            buffer = 0
+        elif buffer is None:
+            buffer = -1 # avoid running it
+        self.__buffer = buffer
     
     #/************************************************************************/
     @property
