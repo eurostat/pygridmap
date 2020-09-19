@@ -131,11 +131,6 @@ class GridProcessor():
             assert (cores is None or isinstance(cores, int)) 
         except: raise TypeError("Wrong format for cores number: '%s'" % cores)
         self.__cores = cores or NPROCESSES
-            
-    #/************************************************************************/
-    @property
-    def processor(self):
-        return self.__processor
 
     #/************************************************************************/
     @property
