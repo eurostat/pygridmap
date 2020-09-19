@@ -61,7 +61,6 @@ from pygridmap.gridding import GridMaker
 class GridOverlay(GridProcessor):
 
     HOWS = ['intersection', 'union']
-    MODES
     RULES = ['sum', 'max', 'min', 'list'] # 'gsum', 'hsum'
     SORTS = ['rc', 'cr']
     
@@ -81,15 +80,16 @@ class GridOverlay(GridProcessor):
  
     #/************************************************************************/
     def __init__(self, **kwargs):
-        self.__mode, self.__how = None, None
-        self.__buff_geom_prec = True
+        self.__how = None
+        self.__buff_geom_prec, self.__memory_split = True, False
         self.__keep_geom_type, self.__preserve_polygon = True, False
-        super(GridOverlay,self).__init__(**kwargs)
         self.mode = kwargs.pop('mode', 'prll') # 'prll'
+        super(GridOverlay,self).__init__(**kwargs)
         self.how = kwargs.pop('how', 'intersection') # self.HOWS[0]
         self.buff_geom_prec = kwargs.pop('buff_geom_prec', True)
         self.keep_geom_type = kwargs.pop('keep_geom_type', True)
         self.preserve_polygon = kwargs.pop('preserve_polygon', False)
+        self.memory_split = kwargs.pop('memory_split', False)
        
     #/************************************************************************/
     @property
@@ -104,6 +104,24 @@ class GridOverlay(GridProcessor):
             assert (mode in self.MODES)
         except: raise IOError("Wrong value for overlay processing mode")
         self.__mode = mode
+       
+    #/************************************************************************/
+    @property
+    def memory_split(self):
+        return self.__memory_split
+    @memory_split.setter
+    def memory_split(self, mem):
+        try:
+            assert isinstance(mem, bool)
+        except: raise TypeError("Wrong format for memory_split parameter")
+        try:
+            mem = False if self.mode == 'seq' or self.cores == 1 else mem
+        except: pass
+        if mem is True:
+            self.__processor = self.process_split_tile
+        else:
+            self.__processor = self.process_tile
+        self.__memory_split = mem
 
     #/************************************************************************/
     @property
@@ -159,18 +177,6 @@ class GridOverlay(GridProcessor):
         elif np.isscalar(buffer) and buffer <0:
             raise IOError("Wrong value for buff_geom_prec parameter, must be >0")
         self.__buff_geom_prec = buffer
-        
-    #/************************************************************************/
-    @property
-    def asc(self):
-        return self.__asc
-    @asc.setter
-    def asc(self, asc):        
-        try:
-            assert (isinstance(asc, bool)                                                   \
-                or (isinstance(asc, (tuple,list)) and all([isinstance(a,bool) for a in asc])))
-        except: raise TypeError("Wrong format for ascending parameter")
-        self.__asc = [True,True] if asc is True else asc
     
     #/************************************************************************/
     @classmethod
@@ -187,8 +193,8 @@ class GridOverlay(GridProcessor):
     
     #/************************************************************************/
     @classmethod
-    def crop_grid_tile(cls, idx, grid, gridbbox, cellsize, tilesize, sorted_, 
-                       buff_geom_prec = None, preserve_tile = False):
+    def crop_grid_tile(cls, idx, gridbbox, cellsize, tilesize, grid, 
+                       preserve_tile = False, buff_geom_prec = None, sort = False):
         iy, ix = idx[:2]
         buff_geom_prec = buff_geom_prec or GridProcessor.TOL_EPS # or 0?
         tilebbox = None
@@ -208,10 +214,10 @@ class GridOverlay(GridProcessor):
             elif cls.COL_X in grid.columns and cls.COL_Y in grid.columns:
                 index = grid[(grid[cls.COL_X] >= xmin) & (grid[cls.COL_X]  <= xmax) \
                             & (grid[cls.COL_Y] >= ymin)  & (grid[cls.COL_Y] <= ymax)].index
-            elif sorted_ not in (False, None):
+            elif sort not in (False, None):
                 nygrid, nxgrid = tilesize
                 nrows, ncols = cls.get_grid_shape(cellsize, gridbbox)
-                index = [(iy*nygrid + j)*ncols + (ix*nxgrid + i) if sorted_ == 'rc'    \
+                index = [(iy*nygrid + j)*ncols + (ix*nxgrid + i) if sort == 'rc'    \
                          else (iy*nygrid + j) + (ix*nxgrid + i)*nrows               \
                           for j in range(nygrid) for i in range(nxgrid)]
                 # index = [(ix*nxgrid + i)*nrows + (iy*nygrid + j) for j in range(nygrid) for i in range(nxgrid)]
@@ -363,9 +369,11 @@ class GridOverlay(GridProcessor):
 
     #/************************************************************************/
     @classmethod
-    def process_split_tile(cls, polygons, subgrid, 
+    def process_split_tile(cls, dummy1, dummy2, dummy3, dummy4, # all ignored
+                           polygons, subgrid, 
                            area, cover, rule, columns, how_overlay,
-                           buff_geom_prec, keep_geom_type, preserve_polygon):
+                           buff_geom_prec, keep_geom_type, preserve_polygon, 
+                           dummy5): # also ignored
         # define the subgrid over the specific tile considered for processing
         if columns not in (None,[]): 
             # and (intercols:=set(columns).intersection(set(subgrid.columns))) != set()):
@@ -396,19 +404,21 @@ class GridOverlay(GridProcessor):
     
     #/************************************************************************/
     @classmethod
-    def process_tile(cls, idx, polygons, grid, gridbbox, cellsize, tilesize,
+    def process_tile(cls, idx, gridbbox, cellsize, tilesize, 
+                     polygons, grid,
                      area, cover, rule, columns, how_overlay, 
-                     sorted_, buff_geom_prec, keep_geom_type, preserve_polygon):
+                     buff_geom_prec, keep_geom_type, preserve_polygon, 
+                     sort):
         # define the subgrid over the specific tile considered for processing
-        subgrid = cls.crop_grid_tile(idx, grid, gridbbox, cellsize, tilesize, sorted_, 
-                                     buff_geom_prec = buff_geom_prec, preserve_tile = False) 
+        subgrid = cls.crop_grid_tile(idx, gridbbox, cellsize, tilesize, grid, 
+                                     preserve_tile = False, buff_geom_prec = buff_geom_prec, sort = sort) 
         if subgrid is None or subgrid.is_empty.all():
             return None        
         # define the overlay (e.g., how_overlay=intersection or union) geometries of both the polygons
         # and the subgrid
-        return cls.process_split_tile(polygons, subgrid, 
+        return cls.process_split_tile(None, None, None, None, polygons, subgrid, 
                                       area, cover, rule, columns, how_overlay, 
-                                      buff_geom_prec, keep_geom_type, preserve_polygon)
+                                      buff_geom_prec, keep_geom_type, preserve_polygon, None)
       
     #/************************************************************************/
     def __call__(self, polygons, grid, 
@@ -477,41 +487,42 @@ class GridOverlay(GridProcessor):
         if not isinstance(tilesize, str):
             nytiles, nxtiles = tileshape
             iytiles, ixtiles = list(range(nytiles)), list(range(nxtiles))
+        # verify processing mode
+        if nytiles * nxtiles > 1 and self.mode != 'seq' and self.cores > 1:
+            # warnings.warn('No parallel processing available for unique tile')
+            cores, processor = 1, self.process_tile
+        else:
+            cores, processor = self.cores, self.processor        
         # start processing        
-        pool = mp.Pool(processes = self.cores)
+        pool = mp.Pool(processes = cores)
         if cover is True:
-            # polygons = (polygons
-            #             .reset_index()
+            # polygons = (polygons.reset_index()
             #             .set_index('index', drop = False)
             #             .rename(columns={'index': self.COL_POLIDX})
             #            ) 
             polygons[self.COL_POLIDX] = polygons.index.copy()
-        memory_split = False if self.cores * nytiles * nxtiles == 1 else self.memory_split
-        if memory_split is True:
-            olay_tile = []
-            for ix in ixtiles:
-                for iy in iytiles:
+        memory_split = False if nytiles * nxtiles == 1 else self.memory_split
+        olay_tile = []
+        for ix in ixtiles:
+            for iy in iytiles:
+                if memory_split is True:
                     subgrid = self.crop_grid_tile([iy, ix, nytiles, nxtiles], 
-                                                  grid, gridbbox, cellsize, tilesize,  
-                                                  self.sorted, preserve_tile = False) 
+                                                  gridbbox, cellsize, tilesize, grid,  
+                                                  preserve_tile = False, 
+                                                  buff_geom_prec = self.buff_geom_prec
+                                                  sort = self.sorted) 
                     if subgrid is None or subgrid.is_empty.all():
                         continue        
-                    olay_tile.append(pool.apply_async(self.process_split_tile,
-                                                      args = (polygons, subgrid, 
-                                                              area, cover, rule, columns, self.how, 
-                                                              self.buff_geom_prec,
-                                                              self.keep_geom_type, self.preserve_polygon
-                                                             ))
-                                    )
-        else:
-            olay_tile = [pool.apply_async(self.process_tile,
-                                             args = ([iy, ix, nytiles, nxtiles], 
-                                                     polygons, grid, gridbbox, cellsize, tilesize, 
-                                                     area, cover, rule, columns, self.how, 
-                                                     self.sorted, self.buff_geom_prec,
-                                                     self.keep_geom_type, self.preserve_polygon
-                                                    ))    
-                            for iy in iytiles for ix in ixtiles]       
+                olay_tile.append(pool.apply_async(self.processor,
+                                                 args = ([iy, ix, nytiles, nxtiles], 
+                                                         gridbbox, cellsize, tilesize, 
+                                                         polygons, subgrid if memory_split is True else grid, 
+                                                         area, cover, rule, columns, self.how, 
+                                                         self.buff_geom_prec,
+                                                         self.keep_geom_type, self.preserve_polygon, 
+                                                         self.sorted
+                                                        ))  
+                                )
         pool.close()
         pool.join()
         olay = pd.concat([t.get() for t in olay_tile if t is not None], 
