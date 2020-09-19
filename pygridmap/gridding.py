@@ -268,7 +268,7 @@ class GridMaker(GridProcessor):
         return pd.concat(cells, axis=0, ignore_index=True)    
     
     #/************************************************************************/
-    def __call__(self, bbox = None, mask = None, crs = DEFPROJ, interior = False, 
+    def __call__(self, bbox = None, mask = None, crs = None, interior = False, 
                  trim = True, crop = False, drop = False):
         # check that data are actually parsed...
         try:
@@ -283,6 +283,18 @@ class GridMaker(GridProcessor):
             try:
                 assert (len(bbox)==4 and bbox[0]<bbox[2] and bbox[1]<bbox[3])
             except: raise IOError("Grid bounding box parameter not recognised")
+        # check crs flag
+        try:
+            assert (crs is None or isinstance(crs, (string_types, integer_types)))
+        except: raise TypeError("Wrong format for projection")
+        if crs is None:
+            try:
+                crs = mask.crs
+            except: raise IOError("No information for output grid reference system")
+        elif isinstance(crs, integer_types):
+            crs = str(crs) 
+        if not crs.startswith("EPSG"):
+            crs = "EPSG:%s" % crs 
         # check mask
         try:
             assert (mask is None or isinstance(mask, (bool, pd.DataFrame, gpd.GeoSeries, gpd.GeoDataFrame)))
@@ -296,14 +308,6 @@ class GridMaker(GridProcessor):
         # update bbox
         if bbox is None:
             bbox = mask.total_bounds.tolist()
-        # check crs flag
-        try:
-            assert isinstance(crs, (string_types, integer_types)) 
-        except: raise TypeError("Wrong format for projection")
-        if isinstance(crs, integer_types):
-            crs = str(crs) 
-        if not crs.startswith("EPSG"):
-            crs = "EPSG:%s" % crs 
         # check interior flag
         try:
             assert isinstance(interior, bool)
