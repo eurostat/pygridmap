@@ -69,12 +69,12 @@ class GridMaker(GridProcessor):
     
     #/************************************************************************/
     def __init__(self, **kwargs):
-        self.__mode, self.__processor = None, None
-        self.__buffer = None
         self.__xypos = None
+        self.__asc = None
+        self.mode = kwargs.pop('mode', 'prll') # self.MODES[0]
         super(GridMaker,self).__init__(**kwargs)
-        self.mode = kwargs.pop('mode', 'prll')
-        self.buffer = kwargs.get('buffer')
+        self.asc = kwargs.pop('asc', True)
+        self.xypos = kwargs.pop('xypos ', True)
     
     #/************************************************************************/
     @property
@@ -110,22 +110,6 @@ class GridMaker(GridProcessor):
         if xypos is None:
             xypos = self.XYPOS[0] # arbitrary default choice: 'LLc'
         self.__xypos = xypos
-    
-    #/************************************************************************/
-    @property
-    def buffer(self):
-        # return self.__buffer 
-        return self.cell if self.__buffer is True else self.__buffer
-    @buffer.setter
-    def buffer(self, buffer):
-        try:
-            assert (buffer is None or isinstance(buffer, bool) or np.isscalar(buffer))
-        except: raise TypeError("Wrong format for buffer parameter")  
-        if buffer == 'eps':
-            buffer = 1e-14
-        elif buffer is False:
-            buffer = 0
-        self.__buffer = [buffer, buffer] if np.isscalar(buffer) else buffer
        
     #/************************************************************************/
     @property
@@ -338,14 +322,6 @@ class GridMaker(GridProcessor):
         cellsize, tilesize = self.cell, self.tile
         sort = self.sorted
         xypos = self.xypos
-        # verify processing mode
-        if self.mode == 'qtree' and not all([math.log(t,2).is_integer() for t in tilesize]):
-            raise IOError('Quadtree algorithm requires tile size to be a power of 2')
-        elif tilesize == 1 and self.mode != 'seq' and self.cores>1:
-            # warnings.warn('No parallel processing available for unique tile')
-            cores, processor = 1, self.prll_process_tile
-        else:
-            cores, processor = self.cores, self.processor
         # update tiling processing parameters
         if np.isscalar(tilesize):
             tileshape = self.set_tile_shape(tilesize)
@@ -354,8 +330,16 @@ class GridMaker(GridProcessor):
             # tilesize: unchanged
             tileshape = self.get_tile_shape(cellsize, tilesize, bbox)
         nytiles, nxtiles = tileshape
+        # verify processing mode
+        if self.mode == 'qtree' and not all([math.log(t,2).is_integer() for t in tilesize]):
+            raise IOError('Quadtree algorithm requires tile size to be a power of 2')
+        elif nytiles * nxtiles > 1 and self.mode != 'seq' and self.cores > 1:
+            # warnings.warn('No parallel processing available for unique tile')
+            cores, processor = 1, self.prll_process_tile
+        else:
+            cores, processor = self.cores, self.processor
         # start processing
-        pool = mp.Pool(processes=cores)
+        pool = mp.Pool(processes = cores)
         grid_tiles = [pool.apply_async(processor,
                                        args = ([iy, ix, nytiles, nxtiles],
                                                bbox, cellsize, tilesize, xypos,
