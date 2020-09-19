@@ -81,12 +81,11 @@ class GridOverlay(GridProcessor):
     #/************************************************************************/
     def __init__(self, **kwargs):
         self.__how = None
-        self.__buff_geom_prec, self.__memory_split = True, False
+        self.__memory_split = False
         self.__keep_geom_type, self.__preserve_polygon = True, False
         self.mode = kwargs.pop('mode', 'prll') # 'prll'
         super(GridOverlay,self).__init__(**kwargs)
         self.how = kwargs.pop('how', 'intersection') # self.HOWS[0]
-        self.buff_geom_prec = kwargs.pop('buff_geom_prec', True)
         self.keep_geom_type = kwargs.pop('keep_geom_type', True)
         self.preserve_polygon = kwargs.pop('preserve_polygon', False)
         self.memory_split = kwargs.pop('memory_split', False)
@@ -162,22 +161,8 @@ class GridOverlay(GridProcessor):
     #/************************************************************************/
     @property
     def buff_geom_prec(self):
-        return self.__buff_geom_prec
-    @buff_geom_prec.setter
-    def buff_geom_prec(self, buffer):        
-        try:
-            assert (buffer is None or isinstance(buffer, bool) or np.isscalar(buffer))
-        except: raise TypeError("Wrong format for buff_geom_prec parameter")
-        if buffer is True:
-            buffer = GridProcessor.TOL_EPS
-        elif buffer is False:
-            buffer = 0
-        elif buffer is None:
-            buffer = -1 # avoid running it
-        elif np.isscalar(buffer) and buffer <0:
-            raise IOError("Wrong value for buff_geom_prec parameter, must be >0")
-        self.__buff_geom_prec = buffer
-    
+        return self.__buffer
+     
     #/************************************************************************/
     @classmethod
     def trim_grid(cls, nxtiles, iy, ix, grid, polyarea):
