@@ -411,8 +411,15 @@ class GridOverlay(GridProcessor):
       
     #/************************************************************************/
     def __call__(self, polygons, grid, 
-                 area = True, cover = False, rule = None, columns = None, 
-                 memory_split = True, drop = None):  
+                 area = True, cover = False, rule = None, columns = None, drop = None):  
+        # check input polygons
+        try:
+            assert isinstance(polygons, (gpd.GeoSeries, gpd.GeoDataFrame)))
+        except: raise TypeError("Wrong format for polygons data")
+        # check input polygons
+        try:
+            assert isinstance(grid, (gpd.GeoSeries, gpd.GeoDataFrame)))
+        except: raise TypeError("Wrong format for grid data")
         # check area flag
         try:
             assert isinstance(area, bool)
@@ -440,10 +447,6 @@ class GridOverlay(GridProcessor):
             assert (columns is None or 
                     set(columns).difference(set(polygons.columns)) == set())
         except: raise IOError("Wrong values for columns variable") 
-        # check memory_split flag
-        try:
-            assert isinstance(memory_split, bool)
-        except: raise TypeError("Wrong format for memory_split flag")
         # check drop parameter
         __drops = [self.COL_TILE, self.COL_X, self.COL_Y, 
                    self.COL_INTERSECTS, self.COL_WITHIN,
@@ -482,8 +485,7 @@ class GridOverlay(GridProcessor):
             #             .rename(columns={'index': self.COL_POLIDX})
             #            ) 
             polygons[self.COL_POLIDX] = polygons.index.copy()
-        if self.cores * nytiles * nxtiles == 1:
-            memory_split = False
+        memory_split = False if self.cores * nytiles * nxtiles == 1 else self.memory_split
         if memory_split is True:
             olay_tile = []
             for ix in ixtiles:
@@ -526,31 +528,6 @@ class GridOverlay(GridProcessor):
             drop = set(drop).difference({self.COL_GRIDX, 'geometry'}) # don't drop those two!!!
             olay.drop(columns = list(drop), axis = 1, inplace = True, errors = 'ignore')
         return gpd.GeoDataFrame(olay, crs = grid.crs)
-
-    
-#==============================================================================
-# Method area_interpolate
-#==============================================================================
-
-def area_interpolate(source, target_grid, extensive_variables, 
-                     cell = None, tile = 1, cores = 1, memory_split = False):
-    """Areal interpolation.
-    
-    Running:
-    
-        >>> from pygridmap import gridding
-        >>> estimate = gridding.area_interpolate(source, target, extensive_variables) 
-
-    is equivalent to:
-    
-        >>> from tobler import area_weighted
-        >>> estimate = area_weighted.area_interpolate(source, target, extensive_variables = extensive_variables)
-
-    where the target layer `target` is a regular grid. 
-    """
-    proc = GridOverlay(how = 'intersection', cell = cell, cores = cores, tile = tile)
-    return proc(source, target_grid, rule = 'sum', columns = extensive_variables, 
-                memory_split = memory_split, area = True, cover = True, drop = True)
 
 
 #%% Main for binary usage
