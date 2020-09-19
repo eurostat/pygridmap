@@ -119,7 +119,7 @@ class GridProcessor():
         self.cores = kwargs.get('cores')
         self.cell, self.tile = kwargs.get('cell'), kwargs.get('tile')
         self.buffer = kwargs.get('buffer')
-        self.sorted = kwargs.get('sorted')
+        self.sorted = kwargs.get('sorted', True)
        
     #/************************************************************************/
     @property
