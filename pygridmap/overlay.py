@@ -105,7 +105,12 @@ class GridOverlay(GridProcessor):
             assert (mode in self.MODES)
         except: raise IOError("Wrong value for overlay processing mode")
         self.__mode = mode
-       
+             
+    #/************************************************************************/
+    @property
+    def processor(self):
+        return self.__processor
+      
     #/************************************************************************/
     @property
     def memory_split(self):
