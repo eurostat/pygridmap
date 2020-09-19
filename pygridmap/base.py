@@ -129,7 +129,7 @@ class GridProcessor():
     def cores(self, cores):
         try:
             assert (cores is None or isinstance(cores, int)) 
-        except: raise TypeError("Wrong format for cores number")
+        except: raise TypeError("Wrong format for cores number: '%s'" % cores)
         self.__cores = cores or NPROCESSES
             
     #/************************************************************************/
@@ -141,7 +141,7 @@ class GridProcessor():
         try:
             assert (cell is None or isinstance(cell, int)                                  \
                 or (isinstance(cell, (tuple,list)) and all([isinstance(c,int) for c in cell])))
-        except: raise TypeError("Wrong format for cell size parameter")
+        except: raise TypeError("Wrong format for cell size parameter: '%s'" % cell)
         self.__cell = [cell, cell] if np.isscalar(cell) else cell
             
     #/************************************************************************/
@@ -153,7 +153,7 @@ class GridProcessor():
         try:
             assert (tile is None or isinstance(tile, bool) or np.isscalar(tile)         \
                 or (isinstance(tile, (tuple,list)) and all([np.isscalar(t) for t in tile])))
-        except: raise TypeError("Wrong format for tiling parameter")
+        except: raise TypeError("Wrong format for tiling parameter: '%s'" % tile)
         try:
             tile = (self.cores if tile is True else 1) if isinstance(tile, bool) else tile
         except:
@@ -173,10 +173,10 @@ class GridProcessor():
         try:
             assert (buffer is None or isinstance(buffer, bool) or np.isscalar(buffer)
                    or (isinstance(buffer, (list,tuple)) and len(buffer)==2))
-        except: raise TypeError("Wrong format for buffer parameter")  
+        except: raise TypeError("Wrong format for buffer parameter: '%s'" % buffer)  
         if isinstance(buffer, (list,tuple)):
             if not all(np.isscalar(b) for b in buffer):
-                raise TypeError("Wrong format for buffer list of parameters")
+                raise TypeError("Wrong format for buffer list of parameters: '%s'" % buffer)
             elif not all(b >= 0 for b in buffer):
                 raise IOError("Wrong value for buffer list of parameters, must be >0")
         elif np.isscalar(buffer) and buffer  < 0:
@@ -197,7 +197,7 @@ class GridProcessor():
     def sorted(self, _sorted):        
         try:
             assert (isinstance(_sorted, bool) or _sorted in self.SORTS)
-        except: raise TypeError("Wrong format for sorted parameter")
+        except: raise TypeError("Wrong format for sorted parameter: '%s'" % _sorted)
         if _sorted is True:              
             _sorted = self.SORTS[0]
         self.__sorted = _sorted
