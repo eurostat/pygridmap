@@ -283,10 +283,15 @@ class GridMaker(GridProcessor):
             try:
                 assert (len(bbox)==4 and bbox[0]<bbox[2] and bbox[1]<bbox[3])
             except: raise IOError("Grid bounding box parameter not recognised")
+        # check mask
+        try:
+            assert (mask is None or isinstance(mask, (bool, pd.DataFrame, gpd.GeoSeries, gpd.GeoDataFrame)))
+        except: raise TypeError("Wrong format for mask data")	
         # check crs flag
         try:
             assert (crs is None or isinstance(crs, (string_types, integer_types)))
         except: raise TypeError("Wrong format for projection")
+        # update bbox/mask/rcs accordingly
         if crs is None:
             try:
                 crs = mask.crs
@@ -295,10 +300,6 @@ class GridMaker(GridProcessor):
             crs = str(crs) 
         if not crs.startswith("EPSG"):
             crs = "EPSG:%s" % crs 
-        # check mask
-        try:
-            assert (mask is None or isinstance(mask, (bool, pd.DataFrame, gpd.GeoSeries, gpd.GeoDataFrame)))
-        except: raise TypeError("Wrong format for mask data")	
         if isinstance(mask, pd.DataFrame): 
             try: # assuming there is a geometry
                 assert ("geometry" in mask.columns)
