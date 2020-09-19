@@ -106,7 +106,7 @@ class GridMaker(GridProcessor):
     def xypos(self, xypos):        
         try:
             assert (xypos is None or xypos in self.XYPOS)
-        except: raise TypeError("Wrong format for (Y,Y) coordinates location in the grid cell")
+        except: raise TypeError("Wrong format for (Y,Y) coordinates location in the grid cell: '%s'" % xypos)
         if xypos is None:
             xypos = self.XYPOS[0] # arbitrary default choice: 'LLc'
         self.__xypos = xypos
@@ -120,7 +120,7 @@ class GridMaker(GridProcessor):
         try:
             assert (isinstance(asc, bool)                                                   \
                 or (isinstance(asc, (tuple,list)) and all([isinstance(a,bool) for a in asc])))
-        except: raise TypeError("Wrong format for ascending parameter")
+        except: raise TypeError("Wrong format for ascending parameter: '%s'" % asc)
         if asc is True and self.sorted!='tile':
             asc = [True,True] if self.sorted in ('rc','cr') else [True,True,True] 
         self.__asc = asc
