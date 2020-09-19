@@ -74,7 +74,7 @@ class GridMaker(GridProcessor):
         self.mode = kwargs.pop('mode', 'prll') # self.MODES[0]
         super(GridMaker,self).__init__(**kwargs)
         self.asc = kwargs.pop('asc', True)
-        self.xypos = kwargs.pop('xypos ', True)
+        self.xypos = kwargs.pop('xypos ', None)
     
     #/************************************************************************/
     @property
