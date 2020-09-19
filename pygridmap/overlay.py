@@ -61,6 +61,7 @@ from pygridmap.gridding import GridMaker
 class GridOverlay(GridProcessor):
 
     HOWS = ['intersection', 'union']
+    MODES
     RULES = ['sum', 'max', 'min', 'list'] # 'gsum', 'hsum'
     SORTS = ['rc', 'cr']
     
@@ -84,7 +85,7 @@ class GridOverlay(GridProcessor):
         self.__buff_geom_prec = True
         self.__keep_geom_type, self.__preserve_polygon = True, False
         super(GridOverlay,self).__init__(**kwargs)
-        self.mode = 'prll' # kwargs.pop('mode', 'prll') # ignored
+        self.mode = kwargs.pop('mode', 'prll') # 'prll'
         self.how = kwargs.pop('how', 'intersection') # self.HOWS[0]
         self.buff_geom_prec = kwargs.pop('buff_geom_prec', True)
         self.keep_geom_type = kwargs.pop('keep_geom_type', True)
