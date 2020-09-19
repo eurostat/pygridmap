@@ -98,7 +98,7 @@ class GridOverlay(GridProcessor):
     def mode(self, mode):
         try:
             assert isinstance(mode, str)
-        except: raise TypeError("Wrong format for overlay processing mode")
+        except: raise TypeError("Wrong format for overlay processing mode: '%s'" % mode)
         try:
             assert (mode in self.MODES)
         except: raise IOError("Wrong value for overlay processing mode")
@@ -112,7 +112,7 @@ class GridOverlay(GridProcessor):
     def memory_split(self, mem):
         try:
             assert isinstance(mem, bool)
-        except: raise TypeError("Wrong format for memory_split parameter")
+        except: raise TypeError("Wrong format for memory_split parameter: '%s'" % mem)
         try:
             mem = False if self.mode == 'seq' or self.cores == 1 else mem
         except: pass
@@ -130,7 +130,7 @@ class GridOverlay(GridProcessor):
     def how(self, how):
         try:
             assert isinstance(how, str)
-        except: raise TypeError("Wrong format for overlay geometrical operation")
+        except: raise TypeError("Wrong format for overlay geometrical operation: '%s'" % how)
         try:
             assert (how in self.HOWS)
         except: raise IOError("Wrong value for overlay geometrical operation")
