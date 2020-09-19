@@ -95,6 +95,11 @@ class GridMaker(GridProcessor):
         elif mode == 'seq':
             self.__processor = self.prll_process_tile
         self.__mode = mode
+            
+    #/************************************************************************/
+    @property
+    def processor(self):
+        return self.__processor
        
     #/************************************************************************/
     @property
