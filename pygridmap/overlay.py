@@ -83,6 +83,7 @@ class GridOverlay(GridProcessor):
         self.__how = None
         self.__memory_split = False
         self.__keep_geom_type, self.__preserve_polygon = True, False
+        self.__processor = None
         self.mode = kwargs.pop('mode', 'prll') # 'prll'
         super(GridOverlay,self).__init__(**kwargs)
         self.buffer = kwargs.pop('buffer', True)
