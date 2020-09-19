@@ -118,8 +118,8 @@ class GridProcessor():
         # self.mode = kwargs.pop('mode', self.MODES[0])
         self.cores = kwargs.get('cores')
         self.cell, self.tile = kwargs.get('cell'), kwargs.get('tile')
-        self.buffer = kwargs.pop('buffer', True)
-        self.sorted = kwargs.pop('sorted', False)
+        self.buffer = kwargs.get('buffer')
+        self.sorted = kwargs.get('sorted')
        
     #/************************************************************************/
     @property
