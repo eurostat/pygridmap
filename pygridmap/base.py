@@ -60,7 +60,7 @@ except:
 else:
     NPROCESSES = NCPUS = mp.cpu_count()
 
-	
+
 #%% Core functions/classes
 
 #==============================================================================
@@ -111,15 +111,13 @@ class GridProcessor():
     #/************************************************************************/
     def __init__(self, **kwargs):
         # some dumb init
-        self.__mode, self.__cores = None, 1
+        self.__mode, self.__processor, self.__cores = None, None, None
         self.__cell, self.__tile = None, None
-        # self.__sorted, self.__asc = None, None
+        self.__sorted = None
         # self.mode = kwargs.pop('mode', self.MODES[0])
-        self.cores = kwargs.get('cores') or NPROCESSES
-        self.cell = kwargs.get('cell')
-        self.tile = kwargs.get('tile')
+        self.cores = kwargs.get('cores')
+        self.cell, self.tile = kwargs.get('cell'), kwargs.get('tile')
         self.sorted = kwargs.pop('sorted', False)
-        self.asc = kwargs.pop('asc', True)
        
     #/************************************************************************/
     @property
@@ -128,9 +126,9 @@ class GridProcessor():
     @cores.setter
     def cores(self, cores):
         try:
-            assert isinstance(cores, int) 
+            assert (cores is None or isinstance(cores, int)) 
         except: raise TypeError("Wrong format for cores number")
-        self.__cores = cores
+        self.__cores = cores or NPROCESSES
             
     #/************************************************************************/
     @property
@@ -154,8 +152,14 @@ class GridProcessor():
             assert (tile is None or isinstance(tile, bool) or np.isscalar(tile)         \
                 or (isinstance(tile, (tuple,list)) and all([np.isscalar(t) for t in tile])))
         except: raise TypeError("Wrong format for tiling parameter")
-        if isinstance(tile, bool): 
-            tile = self.cores if tile is True else 1
+        try:
+            tile = (self.cores if tile is True else 1) if isinstance(tile, bool) else tile
+        except:
+            tile = (NPROCESSES if tile is True else 1) if isinstance(tile, bool) else tile
+        try:
+            tile = 1 if self.mode == 'seq' else tile
+        except:
+            pass
         self.__tile = tile
     
     #/************************************************************************/
@@ -163,13 +167,13 @@ class GridProcessor():
     def sorted(self):
         return self.__sorted    
     @sorted.setter
-    def sorted(self, sort):        
+    def sorted(self, _sorted):        
         try:
-            assert (isinstance(sort, bool) or sort in self.SORTS)
-        except: raise TypeError("Wrong format for sorting parameter")
-        if sort is True:              
-            sort = self.SORTS[0]
-        self.__sorted = sort
+            assert (isinstance(_sorted, bool) or _sorted in self.SORTS)
+        except: raise TypeError("Wrong format for sorted parameter")
+        if _sorted is True:              
+            _sorted = self.SORTS[0]
+        self.__sorted = _sorted
 
     #/************************************************************************/
     @staticmethod
