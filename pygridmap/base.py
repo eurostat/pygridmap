@@ -177,16 +177,16 @@ class GridProcessor():
         if isinstance(buffer, (list,tuple)):
             if not all(np.isscalar(b) for b in buffer):
                 raise TypeError("Wrong format for buffer list of parameters: '%s'" % buffer)
-            elif not all(b >= 0 for b in buffer):
-                raise IOError("Wrong value for buffer list of parameters, must be >0")
-        elif np.isscalar(buffer) and buffer  < 0:
-            raise IOError("Wrong value for buffer parameter, must be >0")
+            #elif not all(b >= 0 for b in buffer):
+            #    raise IOError("Wrong value for buffer list of parameters, must be >0")
+        #elif np.isscalar(buffer) and buffer < 0:
+        #    raise IOError("Wrong value for buffer parameter, must be >0")
         elif buffer is True:
             buffer = self.TOL_EPS # GridProcessor.TOL_EPS
         elif buffer is False:
             buffer = 0
         elif buffer is None:
-            buffer = -1 # avoid running it
+            pass # buffer = -1 # avoid running it
         self.__buffer = buffer
     
     #/************************************************************************/
