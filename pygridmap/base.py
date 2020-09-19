@@ -111,7 +111,7 @@ class GridProcessor():
     #/************************************************************************/
     def __init__(self, **kwargs):
         # some dumb init
-        self.__mode, self.__processor, self.__cores = None, None, None
+        self.__mode, self.__cores = None, None
         self.__cell, self.__tile = None, None
         self.__buffer = None
         self.__sorted = None
@@ -132,6 +132,11 @@ class GridProcessor():
         except: raise TypeError("Wrong format for cores number: '%s'" % cores)
         self.__cores = cores or NPROCESSES
             
+    #/************************************************************************/
+    @property
+    def processor(self):
+        return self.__processor
+
     #/************************************************************************/
     @property
     def cell(self):
