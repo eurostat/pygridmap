@@ -85,6 +85,7 @@ class GridOverlay(GridProcessor):
         self.__keep_geom_type, self.__preserve_polygon = True, False
         self.mode = kwargs.pop('mode', 'prll') # 'prll'
         super(GridOverlay,self).__init__(**kwargs)
+        self.buffer = kwargs.pop('buffer', True)
         self.how = kwargs.pop('how', 'intersection') # self.HOWS[0]
         self.keep_geom_type = kwargs.pop('keep_geom_type', True)
         self.preserve_polygon = kwargs.pop('preserve_polygon', False)
