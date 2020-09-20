@@ -84,6 +84,7 @@ class GridOverlay(GridProcessor):
         self.__memory_split = False
         self.__keep_geom_type, self.__preserve_polygon = True, False
         self.__processor = None
+        self.__buffer = None
         self.mode = kwargs.pop('mode', 'prll') # 'prll'
         super(GridOverlay,self).__init__(**kwargs)
         self.buffer = kwargs.pop('buffer', True)
@@ -417,11 +418,11 @@ class GridOverlay(GridProcessor):
                  area = True, cover = False, rule = None, columns = None, drop = None):  
         # check input polygons
         try:
-            assert isinstance(polygons, (gpd.GeoSeries, gpd.GeoDataFrame)))
+            assert isinstance(polygons, (gpd.GeoSeries, gpd.GeoDataFrame))
         except: raise TypeError("Wrong format for polygons data")
         # check input polygons
         try:
-            assert isinstance(grid, (gpd.GeoSeries, gpd.GeoDataFrame)))
+            assert isinstance(grid, (gpd.GeoSeries, gpd.GeoDataFrame))
         except: raise TypeError("Wrong format for grid data")
         # check area flag
         try:
@@ -501,7 +502,7 @@ class GridOverlay(GridProcessor):
                     subgrid = self.crop_grid_tile([iy, ix, nytiles, nxtiles], 
                                                   gridbbox, cellsize, tilesize, grid,  
                                                   preserve_tile = False, 
-                                                  buff_geom_prec = self.buff_geom_prec
+                                                  buff_geom_prec = self.buff_geom_prec,
                                                   sort = self.sorted) 
                     if subgrid is None or subgrid.is_empty.all():
                         continue        
