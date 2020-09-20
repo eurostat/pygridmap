@@ -11,18 +11,26 @@ The `pygridmap` package enable you to perform some basic geometric/set operation
 The package `pygridmap` supports the following methods/algorithms: 
 * basic [**vector data handling**](https://saylordotorg.github.io/text_essentials-of-geographic-information-systems/s11-geospatial-analysis-i-vector-o.html) over geospatial grid (_e.g._, bounding box manipulations, locations definition, _etc_...) with the [`GridProcessor`](pygridmap/base.py) class,
 <!-- ![bounding boxes](docs/bbox_manipulation.png)-->
-<table align="center"> <tr> <td align="center" width="750px"> <img src="docs/bbox_manipulation.png"></img></td></tr> </table>
+<table align="center"> 
+        <header> <td align="centre">Regular gridding with different reference locations</td></header> 
+        <tr> <td align="center" width="750px"> <img src="docs/bbox_manipulation.png"></img></td></tr> 
+</table>
 
 * user-defined [**rasterisation**](https://en.wikipedia.org/wiki/Rasterisation) of polygon regions (_e.g._, vector boundaries) into regular grids of various resolutions (_i.e._, dimension of one-size square grid cells) with the [`GridMaker`](pygridmap/gridding.py) class (see also `Java` implementation [GridMaker](https://github.com/eurostat/GridMaker)),
 <!-- ![bounding boxes](docs/BE_interior_gridding.png)-->
-<table align="center"><tr> 
-        <td align="center" width="300px"> <img src="docs/BE_gridding.png"></img></td>
+<table align="center">
+        <header> <td align="centre" colspan=2>Regular gridding covering a spatial domain (left) or its interior only (right)</td></header> 
+        <tr> <td align="center" width="300px"> <img src="docs/BE_gridding.png"></img></td>
         <td align="center" width="300px"> <img src="docs/BE_interior_gridding.png"></img></td>
-</tr> </table>
+        </tr>
+</table>
 
 * customised [**vector overlay operations**](https://docs.qgis.org/3.10/en/docs/user_manual/processing_algs/qgis/vectoroverlay.html) (_e.g._, intersection, union, overlay/overlap and merging) between any polygon layer and a geospatial grid ("regular" or not) with the [`Gridoverlay`](pygridmap/overlay.py) class, including weighted areal interpolation.
 <!-- ![bounding boxes](docs/BE_overlay.png)-->
-<table align="center"> <tr> <td align="center" width="300px"> <img src="docs/BE_overlay.png"></img></td></tr> </table>
+<table align="center">
+        <header> <td align="centre">Intersection of a regular grid with an arbitrary vector layer</td></header> 
+        <tr> <td align="center" width="300px"> <img src="docs/BE_overlay.png"></img></td></tr> 
+</table>
 
 **Quick install**
 
@@ -61,7 +69,10 @@ The following classes are available:
 
 The implementation of the methods above adopts (customised, using the [`multiprocessing`](https://docs.python.org/3/library/multiprocessing.html) module) multitprocessor tiling processing together with (native) vector processing whenever possible in order to take advantage of multiprocessor compute capabilities. Note  that the [`FrameProcessor`](pygridmap/base.py) class can be used to run embarassing parallel calculations on dataframe rows.
 <!-- ![tile processing](docs/BE_tile_processing.png)-->
-<table align="center"> <tr> <td align="center" width="300px"> <img src="docs/BE_tile_processing.png"></img></td> </tr> </table>
+<table align="center">
+        <header> <td align="centre">Processing tiles</td></header> 
+        <tr> <td align="center" width="300px"> <img src="docs/BE_tile_processing.png"></img></td> </tr> 
+</table>
 
 Geometric operations are making an extensive use of the geometric/geospatial `Python` module [`geopandas`](https://geopandas.org/) since this module supports essential features (most of them derived from the [`shapely`](https://shapely.readthedocs.io/en/latest/manual.html) [`fiona`](https://fiona.readthedocs.io/en/latest/manual.html) libraries), like:
   * basic [set](https://geopandas.org/set_operations.html) and [geometric](https://geopandas.org/geometric_manipulations.html) operations, and
@@ -81,6 +92,10 @@ is equivalent to running:
 >>> from tobler import area_weighted
  >>> estimate = area_weighted.area_interpolate(source, target, extensive_variables = attribute)
 ```
+<table align="center">
+        <header> <td align="centre">Areal interpolation of an extensive variable (left) from coarse to fine using `tobler` (left) and `pygridmap` (right)</td></header> 
+        <tr> <td align="center" width="300px"> <img src="docs/overlay_tile.png"></img></td> </tr> 
+</table>
 
 With respect to the latter implementation, the current algorithm supports a tile-based multicore approach for the interpolation (through the setting of the `tile` parameter). The `tobler` algorithm will however help you "project" intensive variables as well.
 
