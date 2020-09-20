@@ -29,7 +29,7 @@ The package `pygridmap` supports the following methods/algorithms:
 <!-- ![bounding boxes](docs/BE_overlay.png)-->
 <table align="center">
         <header> <td align="centre">Intersection of a regular grid with an arbitrary vector layer</td></header> 
-        <tr> <td align="center" width="300px"> <img src="docs/BE_overlay.png"></img></td></tr> 
+        <tr> <td align="center" width="320px"> <img src="docs/BE_overlay.png"></img></td></tr> 
 </table>
 
 **Quick install**
@@ -71,7 +71,7 @@ The implementation of the methods above adopts (customised, using the [`multipro
 <!-- ![tile processing](docs/BE_tile_processing.png)-->
 <table align="center">
         <header> <td align="centre">Example of block-processing tiles</td></header> 
-        <tr> <td align="center" width="300px"> <img src="docs/BE_tile_processing.png"></img></td> </tr> 
+        <tr> <td align="center" width="320px"> <img src="docs/BE_tile_processing.png"></img></td> </tr> 
 </table>
 
 Geometric operations are making an extensive use of the geometric/geospatial `Python` module [`geopandas`](https://geopandas.org/) since this module supports essential features (most of them derived from the [`shapely`](https://shapely.readthedocs.io/en/latest/manual.html) [`fiona`](https://fiona.readthedocs.io/en/latest/manual.html) libraries), like:
