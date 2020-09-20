@@ -71,10 +71,10 @@ These implementations are probably not optimal since they are wrappers to the [`
 
 *Algorithm*
 
-On areal interpolation, the package `tobler` that comes with the [`pysal`](https://github.com/pysal) library enables to perform more generic operations (*i.e.*, not only considering grid as a target layer). Whenever one needs to  project/interpolate an extensive feature `attribute` from a `source` vector layer onto a `target` vector layer (*e.g.*, a regular grid), the following command:
+On areal interpolation, the package `tobler` that is distributed with the [`pysal`](https://github.com/pysal) library enables to perform more generic operations (*i.e.*, not only considering grid as a target layer). Whenever one needs to  project/interpolate an extensive feature `attribute` from a `source` vector layer onto a `target` vector layer (*e.g.*, a regular grid), the following command:
 ```python
->>> from pygridmap import overlay
->>> estimate = overlay.area_interpolate(source, target, attribute) 
+>>> from pygridmap import apps
+>>> estimate = apps.area_interpolate(source, target, attribute) 
 ```
 is equivalent to running:
 ```python
