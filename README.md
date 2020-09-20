@@ -94,7 +94,7 @@ is equivalent to running:
 ```
 <table align="center">
         <header> <td align="centre">Areal interpolation of an extensive variable (left) from coarse to fine using <a href="https://github.com/pysal/tobler/blob/master/notebooks/02_areal_interpolation_example.ipynb"><code>tobler</code> code</a> (left) and <code>pygridmap</code> algorithm (right)</td></header> 
-        <tr> <td align="center" width="850px"> <img src="docs/overlay_tobler.png"></img></td> </tr> 
+        <tr> <td align="center" width="900px"> <img src="docs/overlay_tobler.png"></img></td> </tr> 
 </table>
 
 With respect to the latter implementation, the current algorithm supports a tile-based multicore approach for the interpolation (through the setting of the `tile` parameter). The `tobler` algorithm will however help you "project" intensive variables as well.
