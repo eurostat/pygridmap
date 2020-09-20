@@ -94,6 +94,7 @@ def area_interpolate(source, target, extensive_variables,
     have to be necessarly a grid.
     """
     cores = cores or NCPUS
+    mode = 'prll' # not much use... this actually depends on #{tile}
     tile = tile or NPROCESSES
     rule = 'sum'
     area, cover, drop = True, True, True
