@@ -70,7 +70,7 @@ The following classes are available:
 The implementation of the methods above adopts (customised, using the [`multiprocessing`](https://docs.python.org/3/library/multiprocessing.html) module) multitprocessor tiling processing together with (native) vector processing whenever possible in order to take advantage of multiprocessor compute capabilities. Note  that the [`FrameProcessor`](pygridmap/base.py) class can be used to run embarassing parallel calculations on dataframe rows.
 <!-- ![tile processing](docs/BE_tile_processing.png)-->
 <table align="center">
-        <header> <td align="centre">Processing tiles</td></header> 
+        <header> <td align="centre">Example of block-processing tiles</td></header> 
         <tr> <td align="center" width="300px"> <img src="docs/BE_tile_processing.png"></img></td> </tr> 
 </table>
 
@@ -94,7 +94,7 @@ is equivalent to running:
 ```
 <table align="center">
         <header> <td align="centre">Areal interpolation of an extensive variable (left) from coarse to fine using `tobler` (left) and `pygridmap` (right)</td></header> 
-        <tr> <td align="center" width="300px"> <img src="docs/overlay_tile.png"></img></td> </tr> 
+        <tr> <td align="center" width="300px"> <img src="docs/overlay_tobler.png"></img></td> </tr> 
 </table>
 
 With respect to the latter implementation, the current algorithm supports a tile-based multicore approach for the interpolation (through the setting of the `tile` parameter). The `tobler` algorithm will however help you "project" intensive variables as well.
