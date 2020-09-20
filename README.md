@@ -13,13 +13,13 @@ The package `pygridmap` supports the following methods/algorithms:
 <!-- ![bounding boxes](docs/bbox_manipulation.png)-->
 <table align="center"> 
         <header> <td align="centre">Regular gridding with different reference locations</td></header> 
-        <tr> <td align="center" width="750px"> <img src="docs/bbox_manipulation.png"></img></td></tr> 
+        <tr> <td align="center" width="800px"> <img src="docs/bbox_manipulation.png"></img></td></tr> 
 </table>
 
 * user-defined [**rasterisation**](https://en.wikipedia.org/wiki/Rasterisation) of polygon regions (_e.g._, vector boundaries) into regular grids of various resolutions (_i.e._, dimension of one-size square grid cells) with the [`GridMaker`](pygridmap/gridding.py) class (see also `Java` implementation [GridMaker](https://github.com/eurostat/GridMaker)),
 <!-- ![bounding boxes](docs/BE_interior_gridding.png)-->
 <table align="center">
-        <header> <td align="centre" colspan=2>Regular gridding covering a spatial domain (left) or its interior only (right)</td></header> 
+        <header> <td align="centre" colspan=2>Regular gridding striclty covering a spatial domain (left) or its interior only (right)</td></header> 
         <tr> <td align="center" width="300px"> <img src="docs/BE_gridding.png"></img></td>
         <td align="center" width="300px"> <img src="docs/BE_interior_gridding.png"></img></td>
         </tr>
@@ -94,7 +94,7 @@ is equivalent to running:
 ```
 <table align="center">
         <header> <td align="centre">Areal interpolation of an extensive variable (left) from coarse to fine using `tobler` (left) and `pygridmap` (right)</td></header> 
-        <tr> <td align="center" width="300px"> <img src="docs/overlay_tobler.png"></img></td> </tr> 
+        <tr> <td align="center" width="800px"> <img src="docs/overlay_tobler.png"></img></td> </tr> 
 </table>
 
 With respect to the latter implementation, the current algorithm supports a tile-based multicore approach for the interpolation (through the setting of the `tile` parameter). The `tobler` algorithm will however help you "project" intensive variables as well.
