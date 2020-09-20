@@ -93,7 +93,7 @@ is equivalent to running:
  >>> estimate = area_weighted.area_interpolate(source, target, extensive_variables = attribute)
 ```
 <table align="center">
-        <header> <td align="centre">Areal interpolation of an extensive variable (left) from coarse to fine using `tobler` (left) and `pygridmap` (right)</td></header> 
+        <header> <td align="centre">Areal interpolation of an extensive variable (left) from coarse to fine using <a href="https://github.com/pysal/tobler/blob/master/notebooks/02_areal_interpolation_example.ipynb"><code>tobler</code> code</a> (left) and <code>pygridmap</code> algorithm (right)</td></header> 
         <tr> <td align="center" width="850px"> <img src="docs/overlay_tobler.png"></img></td> </tr> 
 </table>
 
