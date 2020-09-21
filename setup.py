@@ -43,7 +43,7 @@ REQUIRES_PYTHON = '>=3.6.0'
 
 # packages required for this module to be executed
 REQUIRED = [
-    'numpy', 'pandas', 'geopandas', 'shapely'
+    'numpy', 'pandas', 'shapely', 'fiona', 'pyproj', 'geopandas'
 ]
 # in Python standard library (see https://docs.python.org/3/library/):
 # 'collections', 'collections.abc', 'json', 'math', 'multiprocessing',
@@ -52,8 +52,11 @@ REQUIRED = [
 # optional packages
 EXTRAS = {
     'geopy': 'geopy', 
-    'geojson': 'geojson', 
-    'pyproj': 'pyproj',
+    'rtree': 'rtree',
+    'psycopg2': 'psycopg2',
+    'matplotlib': 'matplotlib', 
+    'descartes': 'descartes',
+    'geojson': 'geojson'
     # 'dask': 'dask',
     # 'gisco': 'happygisco'
 }
