@@ -34,8 +34,8 @@ The package `pygridmap` supports the following methods/algorithms:
 
 **Quick launch**
 
-* **Run (and update to your convenience) the test/example notebooks from the [tests/](tests) folder in [`binder`](https://mybinder.org/)**. We provide the interactive environments with already installed packages to query and access _Eurostat_ database for notebook resources below (current build with commit [0ee9305](https://github.com/eurostat/pygridmap/commit/0ee9305ca4e6d13e43a37ef97551b49329538b9a)): <!-- generate new badges: https://mybinder.readthedocs.io/en/latest/howto/badges.html -->
-[![Binder](https://mybinder.org/badge_logo.svg)](http://mybinder.org/v2/gh/eurostat/pygridmap/0ee9305ca4e6d13e43a37ef97551b49329538b9a)
+* **Run (and update to your convenience) the test/example notebooks from the [tests/](tests) folder in [`binder`](https://mybinder.org/)**: [![Binder](https://mybinder.org/badge_logo.svg)](http://mybinder.org/v2/gh/eurostat/pygridmap/0ee9305ca4e6d13e43a37ef97551b49329538b9a). We provide the interactive environments with already installed packages to query and access _Eurostat_ database for notebook resources below (current build with commit [0ee9305](https://github.com/eurostat/pygridmap/commit/0ee9305ca4e6d13e43a37ef97551b49329538b9a)). <!-- generate new badges: https://mybinder.readthedocs.io/en/latest/howto/badges.html -->
+
 
 * **Run the notebooks in [`Google colab`](https://colab.research.google.com/)** separately, namely:
     * [base.ipynb](https://nbviewer.jupyter.org/github/eurostat/pygridmap/blob/master/tests/base.ipynb) for basic data handling operations [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/eurostat/pygridmap/blob/master/tests/base.ipynb),
