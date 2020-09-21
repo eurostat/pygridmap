@@ -56,6 +56,7 @@ EXTRAS = {
     'rtree': 'rtree',
     'psycopg2': 'psycopg2',
     'matplotlib': 'matplotlib', 
+    'branca': 'branca',
     'descartes': 'descartes',
     'geojson': 'geojson'
     # 'dask': 'dask',
