@@ -43,13 +43,14 @@ REQUIRES_PYTHON = '>=3.6.0'
 
 # packages required for this module to be executed
 REQUIRED = [
-    'numpy', 'pandas', 'shapely', 'fiona', 'pyproj', 'geopandas'
+    'numpy', 'pandas', # 'pygeos',
+    'shapely', 'fiona', 'pyproj', 'geopandas'
 ]
 # in Python standard library (see https://docs.python.org/3/library/):
 # 'collections', 'collections.abc', 'json', 'math', 'multiprocessing',
 # 'inspect', 'operator', 'functools', 'itertools'
 
-# optional packages
+# optional packages: see https://geopandas.org/install.html
 EXTRAS = {
     'geopy': 'geopy', 
     'rtree': 'rtree',
