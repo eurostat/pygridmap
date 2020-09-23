@@ -92,7 +92,7 @@ On areal interpolation, the package `tobler` that is distributed with the [`pysa
 is equivalent to running:
 ```python
 >>> from tobler import area_weighted
- >>> estimate = area_weighted.area_interpolate(source, target, extensive_variables = attribute)
+>>> estimate = area_weighted.area_interpolate(source, target, extensive_variables = attribute)
 ```
 <table align="center">
         <header> <td align="centre">Areal interpolation of an extensive variable (left) from coarse to fine using <a href="https://github.com/pysal/tobler/blob/master/notebooks/02_areal_interpolation_example.ipynb"><code>tobler</code> code</a> (left) and <code>pygridmap</code> algorithm (right)</td></header> 
