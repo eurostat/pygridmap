@@ -534,4 +534,57 @@ class GridOverlay(GridProcessor):
         return gpd.GeoDataFrame(olay, crs = grid.crs)
 
 
+#==============================================================================
+# Method area_interpolate
+#==============================================================================
+
+def area_interpolate(source, target, extensive_variables, 
+                     cell = None, tile = None, cores = None, memory_split = False):
+    """Areal interpolation of extensive variable.
+    
+        >>> inter = area_interpolate(source, target, attribute, cell = None, 
+                                    tile = None, cores = None, memory_split = False)
+    
+    Description
+    -----------
+    
+    Given a vector layer `source` with extensive variable(s)/field(s) `attribute` (*e.g.*, a population
+    variable represented at a given scale), running:
+    
+        >>> from pygridmap import apps
+        >>> estimate = gridding.area_interpolate(source, target, attribute) 
+        
+    is then equivalent to:
+    
+        >>> from tobler import area_weighted
+        >>> estimate = area_weighted.area_interpolate(source, target, extensive_variables = attribute)
+        
+    where the target layer `target` is typically a regular grid used to "rasterise" the variable(s) 
+    `attribute` from a coarser polygonal resolution (vector representation available in `source`) to a 
+    finer square resolution (unit cells of `target` grid). 
+    
+    Note
+    ----
+    
+    The function actually accepts any polygonal representation as a target layer, *i.e.* `target` does not 
+    have to be necessarly a grid.
+    """
+    cores = cores or NCPUS
+    mode = 'prll' # not much use... this actually depends on #{tile}
+    tile = tile or NPROCESSES
+    rule = 'sum'
+    area, cover, drop = True, True, True
+    
+    proc = GridOverlay(mode = mode, how = 'intersection', cell = cell, cores = cores, tile = tile)
+    try:
+        assert memory_split is None
+        proc.memory_split = False
+        return proc(source, target, rule = rule, columns = extensive_variables, 
+                    area = area, cover = cover, drop = drop)
+    except: # at this stage: either memory_split was None and the proc crashed, or it was not None
+        proc.memory_split = memory_split or True # if it is None, then try with True this time
+        return proc(source, target, rule = rule, columns = extensive_variables, 
+                    area = area, cover = cover, drop = drop)
+    
+
 #%% Main for binary usage
