@@ -82,18 +82,27 @@ Geometric operations are making an extensive use of the geometric/geospatial `Py
   
 These implementations are probably not optimal since they are wrappers to the [`GEOS`](https://trac.osgeo.org/geos/) library, itself a port of the Java Topology Suite ([`JTS`](https://projects.eclipse.org/projects/locationtech.jts)), similarly to what is used in QGis.
 
-*Algorithm*
+*Algorithms*
+
+Given a `source` geospatial representation with various geometries, the simple way to create a regular grid with unit cells of dimension `[cellx, celly]` covering the spatial domain of the source vector layer is:
+```python
+>>> from pygridmap import gridding
+>>> grid = gridding.grid_maker(source, [cellx, celly]) 
+```
+See documentation of method `gridding.grid_maker` for additional parameters.
 
 On areal interpolation, the package `tobler` that is distributed with the [`pysal`](https://github.com/pysal) library enables to perform more generic operations (*i.e.*, not only considering grid as a target layer). Whenever one needs to  project/interpolate an extensive feature `attribute` from a `source` vector layer onto a `target` vector layer (*e.g.*, a regular grid), the following command:
 ```python
->>> from pygridmap import apps
->>> estimate = apps.area_interpolate(source, target, attribute) 
+>>> from pygridmap import overlay
+>>> estimate = overlay.area_interpolate(source, target, attribute) 
 ```
 is equivalent to running:
 ```python
 >>> from tobler import area_weighted
 >>> estimate = area_weighted.area_interpolate(source, target, extensive_variables = attribute)
 ```
+See documentation of method `overlay.area_interpolate` for additional parameters.
+
 <table align="center">
         <header> <td align="centre">Areal interpolation of an extensive variable (left) from coarse to fine using <a href="https://github.com/pysal/tobler/blob/master/notebooks/02_areal_interpolation_example.ipynb"><code>tobler</code> code</a> (left) and <code>pygridmap</code> algorithm (right)</td></header> 
         <tr> <td align="center" width="900px"> <img src="docs/overlay_tobler.png"></img></td> </tr> 
