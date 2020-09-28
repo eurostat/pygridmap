@@ -367,4 +367,36 @@ class GridMaker(GridProcessor):
         return gpd.GeoDataFrame(grid, crs = crs).set_geometry('geometry')     
 
 
+#==============================================================================
+# Method grid_maker
+#==============================================================================
+
+def grid_maker(source, cell, bbox = None, crs = None, tile = None, cores = None, interior = False):
+    """Gridding of a vector layer onto a regular (square) grid
+    
+        >>> grid = grid_maker(source, cell, bounding_box = None, crs = None, 
+                              tile = None, cores = None, interior = False)
+    
+    Description
+    -----------
+    
+    Given a vector layer `source` and a `cell` resolution, a regular grid with (identical) unit cells of
+    dimension `cell` is created so as to cover the spatial coverage of the source data. 
+    
+    Because the gridding is not unique, the domain is adjusted throught the introduction of the bounding 
+    box `bbox` which can be used to parse the start location (LLc) of the grid. Otherwise, the bounding box
+    of the `source` data is used.
+    """
+    cores = cores or NCPUS
+    mode = 'prll' # default for sequential as well
+    tile = tile or NPROCESSES
+    trim, buffer, crop = True, False, False
+    crs = source.crs if crs in (True,None) else (DEFPROJ if crs is False else crs)
+    bbox = bbox or source.total_bounds.tolist()
+
+    proc = GridMaker(cores = cores, mode = mode, cell = cell, tile = tile, buffer = buffer)
+    return proc(bbox, mask = source, crs = crs, interior = interior, 
+                trim = trim, crop = crop)
+
+
 #%% Main for binary usage
