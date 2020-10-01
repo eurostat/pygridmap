@@ -233,9 +233,8 @@ class GridOverlay(GridProcessor):
     
     #/************************************************************************/
     @classmethod
-    def clip_polygon(cls, poly1, poly2, buff_geom_prec = None, keep_geom_type = True, 
+    def clip_polygon(cls, poly1, poly2, keep_geom_type = True, 
                      keep_index = True, keep_area = True): 
-        buff_geom_prec = buff_geom_prec or GridProcessor.TOL_EPS # or 0?
         keep_index = cls.COL_POLIDX if keep_index is True else None
         keep_area = cls.COL_AREA if keep_area is True else None
         # Perform set/geometric intersection/union operations (how_overlay) of 2 polygon layers poly1 and poly2
@@ -277,8 +276,9 @@ class GridOverlay(GridProcessor):
         
     #/************************************************************************/
     @classmethod
-    def overlay_polygons(cls, poly1, poly2, how_overlay, 
+    def overlay_polygons(cls, poly1, poly2, how_overlay, buff_geom_prec = None, 
                          keep_geom_type = True, preserve_polygon = False): 
+        buff_geom_prec = buff_geom_prec or GridProcessor.TOL_EPS # or 0?
         if poly2 is None or poly2.is_empty.all():
             return poly1 if preserve_polygon is True else None
         # when not empty, retrieve the (geometrical) union/intersection of the poly1 with poly2
