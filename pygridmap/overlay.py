@@ -238,7 +238,7 @@ class GridOverlay(GridProcessor):
         buff_geom_prec = buff_geom_prec or GridProcessor.TOL_EPS # or 0?
         # Perform set/geometric intersection/union operations (how_overlay) of a grid (gridarea1)
         # and a model/polygon layer (polygon2) at tile level
-        # 1. build the dissolved version of the polyarea2 (e.g. "merge" the grid geometries into a subgrid)
+        # 1. build the dissolved version of the gridarea1 (e.g. "merge" the grid geometries into a subgrid)
         # gridarea1.reset_index(inplace=True)
         union1 = gridarea1.geometry.unary_union # it is a tile in the case a subgrid is in the interior
         # or (faster?):
