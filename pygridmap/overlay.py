@@ -185,8 +185,8 @@ class GridOverlay(GridProcessor):
     
     #/************************************************************************/
     @classmethod
-    def crop_grid_tile(cls, idx, gridbbox, cellsize, tilesize, grid, 
-                       preserve_tile = False, buff_geom_prec = None, sort = False):
+    def crop_grid(cls, idx, gridbbox, cellsize, tilesize, grid, 
+                  preserve_tile = False, buff_geom_prec = None, sort = False):
         iy, ix = idx[:2]
         buff_geom_prec = buff_geom_prec or GridProcessor.TOL_EPS # or 0?
         tilebbox = None
@@ -233,35 +233,36 @@ class GridOverlay(GridProcessor):
     
     #/************************************************************************/
     @classmethod
-    def overlay_polygon_grid(cls, gridarea1, polygon2, how_overlay, 
-                             buff_geom_prec = None, keep_geom_type = True, preserve_polygon = False): 
+    def clip_polygon(cls, poly1, poly2, buff_geom_prec = None, keep_geom_type = True, 
+                     keep_index = True, keep_area = True): 
         buff_geom_prec = buff_geom_prec or GridProcessor.TOL_EPS # or 0?
-        # Perform set/geometric intersection/union operations (how_overlay) of a grid (gridarea1)
-        # and a model/polygon layer (polygon2) at tile level
-        # 1. build the dissolved version of the gridarea1 (e.g. "merge" the grid geometries into a subgrid)
-        # gridarea1.reset_index(inplace=True)
-        union1 = gridarea1.geometry.unary_union # it is a tile in the case a subgrid is in the interior
+        keep_index = cls.COL_POLIDX if keep_index is True else None
+        keep_area = cls.COL_AREA if keep_area is True else None
+        # Perform set/geometric intersection/union operations (how_overlay) of 2 polygon layers poly1 and poly2
+        # 1. build the dissolved version of the poly1 (e.g. "merge" the geometries)
+        # poly1.reset_index(inplace=True)
+        union1 = poly1.geometry.unary_union # it is a tile in the case a poly1 is a grid
         # or (faster?):
-        # union1 = GeoProcesor.bbox_to_geoframe(*gridarea1.total_bounds, crs = gridarea1.crs)
+        # union1 = GeoProcesor.bbox_to_geoframe(*poly1.total_bounds, crs = poly1.crs)
         # 2. create a bounding box for the initial intersection
-        bbox1 = union1.bounds # one/unary geometry only, same as gridarea1.total_bounds
+        bbox1 = union1.bounds # one/unary geometry only, same as poly1.total_bounds
         # 3. retrieve the spatial index - note tht it can be created outside when calling it the first time
-        sindex2 = polygon2.sindex
-        # 4. get a list of id's for all polygons in polygon2 that overlap/intersect the polyarea1 bounding box 
+        sindex2 = poly2.sindex
+        # 4. get a list of id's for all polygons in poly2 that overlap/intersect the polyarea1 bounding box 
         sidx2 = list(sindex2.intersection(bbox1))
         # checking whether the geometries actually overlap/intersect, otherwise return the gridarea1
         if sidx2 == []:
-            return gridarea1 if preserve_polygon is True else None
-        # 5. clip / subset the polygons in polygon2 that intersect
-        if cls.COL_POLIDX not in polygon2.columns:
-            clipped2 = (polygon2.iloc[sidx2]
+            return None
+        # 5. clip / subset the polygons in poly2 that intersect
+        if keep_index and track_index not in poly2.columns:
+            clipped2 = (poly2.iloc[sidx2]
                         .reset_index() # index reset at the level of the processing tile
-                        .rename(columns={'index': cls.COL_POLIDX})
+                        .rename(columns={'index': keep_index})
                        ) 
         else:
-            clipped2 = polygon2.iloc[sidx2].copy() # the presence of 'copy' will prevent a SettingWithCopyWarning
-        if cls.COL_AREA not in polygon2.columns:
-            clipped2[cls.COL_AREA] = clipped2.area
+            clipped2 = poly2.iloc[sidx2].copy() # the presence of 'copy' will prevent a SettingWithCopyWarning
+        if keep_area and keep_area not in poly2.columns:
+            clipped2[keep_area] = clipped2.area
         if True:
             clipped2['geometry'] = clipped2.intersection(union1)
         else: # geopandas >0 .8
@@ -270,28 +271,32 @@ class GridOverlay(GridProcessor):
                                 keep_geom_type = keep_geom_type
                                )
         # filter out clipped linestrings and points with null area
-        clipped2 = clipped2[clipped2.area>0] # note: clipped2[cls.COL_AREA] != clipped2.area
+        clipped2 = clipped2[clipped2.area>0] # note: clipped2[keep_area] != clipped2.area
         # clean by getting rid of empty geometries, possibly returning the subgrid when empty
-        clipped2 = clipped2[~clipped2.is_empty] 
-        if clipped2.is_empty.all():
-            return gridarea1 if preserve_polygon is True else None
-        # 6. when not empty, retrieve the (geometrical) union/intersection of the subgrid with the 
-        # clipped polygons
+        return clipped2[~clipped2.is_empty] 
+        
+    #/************************************************************************/
+    @classmethod
+    def overlay_polygons(cls, poly1, poly2, how_overlay, 
+                         keep_geom_type = True, preserve_polygon = False): 
+        if poly2 is None or poly2.is_empty.all():
+            return poly1 if preserve_polygon is True else None
+        # when not empty, retrieve the (geometrical) union/intersection of the poly1 with poly2
         # see overlay implementation at https://github.com/geopandas/geopandas/blob/master/geopandas/tools/overlay.py
         try:
-            return gpd.overlay(gridarea1, clipped2, how_overlay, 
+            return gpd.overlay(poly1, poly2, how_overlay, 
                                keep_geom_type = keep_geom_type, make_valid = True)
             # return gpd.overlay(clipped2, gridarea1, how_overlay, keep_geom_type = keep_geom_type, make_valid = True)
         except: # catching pygeos.GEOSException, e.g. TopologyException when a line is crossing another line
             # and no intermediate coordinate records the intersection or by intersecting line segments which
             # are nearly parallel - see GIS stackexchange: https://gis.stackexchange.com/questions/
             #   217789/geopandas-shapely-spatial-difference-topologyexception-no-outgoing-diredge-f
-            gridarea1.geometry = gridarea1.geometry.map(ops.unary_union)
-            clipped2.geometry = clipped2.geometry.map(ops.unary_union)
+            poly1.geometry = poly1.geometry.map(ops.unary_union)
+            poly2.geometry = poly2.geometry.map(ops.unary_union)
             if buff_geom_prec > 0:
-                gridarea1.geometry = gridarea1.geometry.buffer(buff_geom_prec)
-                clipped2.geometry = clipped2.geometry.buffer(buff_geom_prec)
-            return gpd.overlay(gridarea1, clipped2, how_overlay, 
+                poly1.geometry = poly1.geometry.buffer(buff_geom_prec)
+                poly2.geometry = poly2.geometry.buffer(buff_geom_prec)
+            return gpd.overlay(poly1, poly2, how_overlay, 
                                keep_geom_type = keep_geom_type, make_valid = True)
     
     #/************************************************************************/
@@ -372,10 +377,12 @@ class GridOverlay(GridProcessor):
             subgrid.drop(columns = columns, inplace = True, errors = 'ignore')
         # define the geometric overlay (e.g., how_overlay=intersection or union) of both the subgrid 
         # and the polygon representation
-        overlay = cls.overlay_polygon_grid(subgrid, polygons, how_overlay, 
-                                           buff_geom_prec = buff_geom_prec, 
-                                           keep_geom_type = keep_geom_type, 
-                                           preserve_polygon = preserve_polygon)
+        clippoly = cls.clip_polygon(subgrid, polygons, 
+                                    buff_geom_prec = buff_geom_prec, 
+                                    keep_geom_type = keep_geom_type)
+        overlay = cls.overlay_polygons(subgrid, clippoly, how_overlay, 
+                                       keep_geom_type = keep_geom_type, 
+                                       preserve_polygon = preserve_polygon)
         if overlay is None or overlay.is_empty.all():
             return None
         # udpate the attributes available in the overlay geometries to take into account the proportional 
@@ -402,8 +409,8 @@ class GridOverlay(GridProcessor):
                      buff_geom_prec, keep_geom_type, preserve_polygon, 
                      sort):
         # define the subgrid over the specific tile considered for processing
-        subgrid = cls.crop_grid_tile(idx, gridbbox, cellsize, tilesize, grid, 
-                                     preserve_tile = False, buff_geom_prec = buff_geom_prec, sort = sort) 
+        subgrid = cls.crop_grid(idx, gridbbox, cellsize, tilesize, grid, 
+                                preserve_tile = False, buff_geom_prec = buff_geom_prec, sort = sort) 
         if subgrid is None or subgrid.is_empty.all():
             return None        
         # define the overlay (e.g., how_overlay=intersection or union) geometries of both the polygons
@@ -498,11 +505,11 @@ class GridOverlay(GridProcessor):
         for ix in ixtiles:
             for iy in iytiles:
                 if memory_split is True:
-                    subgrid = self.crop_grid_tile([iy, ix, nytiles, nxtiles], 
-                                                  gridbbox, cellsize, tilesize, grid,  
-                                                  preserve_tile = False, 
-                                                  buff_geom_prec = self.buff_geom_prec,
-                                                  sort = self.sorted) 
+                    subgrid = self.crop_grid([iy, ix, nytiles, nxtiles], 
+                                             gridbbox, cellsize, tilesize, grid,  
+                                             preserve_tile = False, 
+                                             buff_geom_prec = self.buff_geom_prec,
+                                             sort = self.sorted) 
                     if subgrid is None or subgrid.is_empty.all():
                         continue        
                 olay_tile.append(pool.apply_async(self.processor,
