@@ -254,7 +254,7 @@ class GridOverlay(GridProcessor):
         if sidx2 == []:
             return None
         # 5. clip / subset the polygons in poly2 that intersect
-        if keep_index and track_index not in poly2.columns:
+        if keep_index and keep_index not in poly2.columns:
             clipped2 = (poly2.iloc[sidx2]
                         .reset_index() # index reset at the level of the processing tile
                         .rename(columns={'index': keep_index})
