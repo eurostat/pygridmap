@@ -378,9 +378,10 @@ class GridOverlay(GridProcessor):
         # define the geometric overlay (e.g., how_overlay=intersection or union) of both the subgrid 
         # and the polygon representation
         clippoly = cls.clip_polygon(subgrid, polygons, 
-                                    buff_geom_prec = buff_geom_prec, 
-                                    keep_geom_type = keep_geom_type)
+                                    keep_geom_type = keep_geom_type,
+                                    keep_index = True, keep_area = True)
         overlay = cls.overlay_polygons(subgrid, clippoly, how_overlay, 
+                                       buff_geom_prec = buff_geom_prec, 
                                        keep_geom_type = keep_geom_type, 
                                        preserve_polygon = preserve_polygon)
         if overlay is None or overlay.is_empty.all():
