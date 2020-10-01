@@ -244,12 +244,12 @@ class GridOverlay(GridProcessor):
         # or (faster?):
         # union1 = GeoProcesor.bbox_to_geoframe(*gridarea1.total_bounds, crs = gridarea1.crs)
         # 2. create a bounding box for the initial intersection
-        bbox1 = union1.bounds # one/unary geometry only, same as polyarea1.total_bounds
+        bbox1 = union1.bounds # one/unary geometry only, same as gridarea1.total_bounds
         # 3. retrieve the spatial index - note tht it can be created outside when calling it the first time
         sindex2 = polygon2.sindex
         # 4. get a list of id's for all polygons in polygon2 that overlap/intersect the polyarea1 bounding box 
         sidx2 = list(sindex2.intersection(bbox1))
-        # checking whether the geometries actually overlap/intersect, otherwise return the polyarea1
+        # checking whether the geometries actually overlap/intersect, otherwise return the gridarea1
         if sidx2 == []:
             return gridarea1 if preserve_polygon is True else None
         # 5. clip / subset the polygons in polygon2 that intersect
