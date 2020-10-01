@@ -233,7 +233,7 @@ class GridOverlay(GridProcessor):
     
     #/************************************************************************/
     @classmethod
-    def clip_overlay_polygon(cls, gridarea1, polygon2, how_overlay, 
+    def overlay_polygon_grid(cls, gridarea1, polygon2, how_overlay, 
                              buff_geom_prec = None, keep_geom_type = True, preserve_polygon = False): 
         buff_geom_prec = buff_geom_prec or GridProcessor.TOL_EPS # or 0?
         # Perform set/geometric intersection/union operations (how_overlay) of a grid (gridarea1)
@@ -372,7 +372,7 @@ class GridOverlay(GridProcessor):
             subgrid.drop(columns = columns, inplace = True, errors = 'ignore')
         # define the geometric overlay (e.g., how_overlay=intersection or union) of both the subgrid 
         # and the polygon representation
-        overlay = cls.clip_overlay_polygon(subgrid, polygons, how_overlay, 
+        overlay = cls.overlay_polygon_grid(subgrid, polygons, how_overlay, 
                                            buff_geom_prec = buff_geom_prec, 
                                            keep_geom_type = keep_geom_type, 
                                            preserve_polygon = preserve_polygon)
