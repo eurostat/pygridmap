@@ -233,8 +233,8 @@ class GridOverlay(GridProcessor):
     
     #/************************************************************************/
     @classmethod
-    def geometry_overlay(cls, gridarea1, polygon2, how_overlay, 
-                         buff_geom_prec = None, keep_geom_type = True, preserve_polygon = False): 
+    def clip_overlay_polygon(cls, gridarea1, polygon2, how_overlay, 
+                             buff_geom_prec = None, keep_geom_type = True, preserve_polygon = False): 
         buff_geom_prec = buff_geom_prec or GridProcessor.TOL_EPS # or 0?
         # Perform set/geometric intersection/union operations (how_overlay) of a grid (gridarea1)
         # and a model/polygon layer (polygon2) at tile level
@@ -372,10 +372,10 @@ class GridOverlay(GridProcessor):
             subgrid.drop(columns = columns, inplace = True, errors = 'ignore')
         # define the geometric overlay (e.g., how_overlay=intersection or union) of both the subgrid 
         # and the polygon representation
-        overlay = cls.geometry_overlay(subgrid, polygons, how_overlay, 
-                                       buff_geom_prec = buff_geom_prec, 
-                                       keep_geom_type = keep_geom_type, 
-                                       preserve_polygon = preserve_polygon)
+        overlay = cls.clip_overlay_polygon(subgrid, polygons, how_overlay, 
+                                           buff_geom_prec = buff_geom_prec, 
+                                           keep_geom_type = keep_geom_type, 
+                                           preserve_polygon = preserve_polygon)
         if overlay is None or overlay.is_empty.all():
             return None
         # udpate the attributes available in the overlay geometries to take into account the proportional 
