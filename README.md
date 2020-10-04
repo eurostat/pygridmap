@@ -127,23 +127,24 @@ With respect to the latter implementation, the current algorithm supports a tile
 * Data handling: [`numpy`](https://numpy.org/) and [`pandas`](http://pandas.pydata.org).
 * Geospatial data processing: [`geopandas`](http://geopandas.org), [`fiona`](https://fiona.readthedocs.io/en/latest/manual.html), [shapely](https://pypi.org/project/Shapely/), [`RTree`](https://toblerity.org/rtree/), [`geopy`](https://github.com/geopy/geopy) and [`pyproj`](https://github.com/pyproj4/pyproj).
 * Map visualisations: [`ipyleaflet`](https://github.com/jupyter-widgets/ipyleaflet) or [`folium`](https://github.com/python-visualization/folium).
+* Areal interpolation (alternative implementation), as well as dasymetric mapping, and change of support: [`tobler`](https://github.com/pysal/tobler), in particular module [`area_weighted`](https://github.com/pysal/tobler/tree/master/tobler/area_weighted).
 
 **<a name="Resources"></a>Other resources**
 
 * Project [python-geospatial](https://github.com/giswqs/python-geospatial), a collection of `Python` packages for geospatial analysis, and earthdatascience, a repository of `Python` [tutorials](https://www.earthdatascience.org/tutorials/python/) and [workshop](https://www.earthdatascience.org/workshops/gis-open-source-python/).
 * Library [`pysal`](https://github.com/pysal/pysal) for geospatial data science with an emphasis on geospatial vector data.
-* Package [`tobler`](https://github.com/pysal/tobler) for an alternative implementation of areal interpolation (module [`area_weighted`](https://github.com/pysal/tobler/tree/master/tobler/area_weighted)), as well as dasymetric mapping, and change of support.
 * Software [`GridMaker`](https://github.com/eurostat/GridMaker) for alternative grid maker. 
 
 **<a name="References"></a>References**
 
 <!-- * Lovelace R., Nowosad J. and Muenchow J. (2019): [**Geocomputation with R**](https://geocompr.robinlovelace.net/), _Chapman & Hall/CRC_. -->
 * Gimond, M. (2019): [**Intro to GIS and Spatial Analysis**](https://mgimond.github.io/Spatial/index.html).
-* de Smith M.J., Goodchild M.F. and Longley P.A. (2018): [**Geospatial Analysis: A Comprehensive Guide to Principles, Techniques and Software Tools**](https://www.spatialanalysisonline.com/HTML/index.html), _The Winchelsea Press_. 
 * Scheider, S. and Huisjes, M.D. (2018): [**Distinguishing extensive and intensive properties for meaningful geocomputation and mapping**](https://www.researchgate.net/publication/328157903_Distinguishing_extensive_and_intensive_properties_for_meaningful_geocomputation_and_mapping), _International Journal of Geographical Information Science_, 33(1):28-54, doi: [10.1080/13658816.2018.1514120](https://doi.org/10.1080/13658816.2018.1514120).
+* de Smith M.J., Goodchild M.F. and Longley P.A. (2018): [**Geospatial Analysis: A Comprehensive Guide to Principles, Techniques and Software Tools**](https://www.spatialanalysisonline.com/HTML/index.html), _The Winchelsea Press_. 
 * Garrard C. (2016): **Geoprocessing with Python**, _Manning Publications_.
 * Westra E. (2016): [**Python Geospatial Development**](https://www.programmer-books.com/wp-content/uploads/2019/04/Python-Geospatial-Development-3rd-Edition.pdf), _PACKT Publishing_.
 * Bahgat K. (2016): **Python Geospatial Development Essentials**, _PACKT Publishing_.
+* Huyen Do V., Thomas-Agnan C. and Vanhems A. (2015): [**Spatial reallocation of areal data – another look at basic methods**](https://www.cairn.info/revue-d-economie-regionale-et-urbaine-2015-1-page-27.htm#), _Revue d’Économie Régionale & Urbaine_, pp.27-58, doi: [10.3917/reru.151.0027](https://doi.org/10.3917/reru.151.0027).
 * Lawed J. (2015): [**QGIS Python Programming CookBook**](https://www.programmer-books.com/wp-content/uploads/2019/05/QGIS-Python-Programming-Cookbook.pdf), _PACKT Publishing_.
 * Kresse W. and Danko D.M., eds. (2012): **Handbook of Geographic Information**, _Springer_, doi: [10.1007/978-3-540-72680-7](https://doi.org/10.1007/978-3-540-72680-7).
 *  Campbell J. and Shin M. (2011): [**Essentials of Geographic Information Systems**](https://saylordotorg.github.io/text_essentials-of-geographic-information-systems/index.html) ([pdf](https://resources.saylor.org/wwwresources/archived/site/textbooks/Essentials%20of%20Geographic%20Information%20Systems.pdf)), _Saylor Academy Open Textbooks_.
