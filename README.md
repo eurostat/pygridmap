@@ -140,6 +140,7 @@ With respect to the latter implementation, the current algorithm supports a tile
 <!-- * Lovelace R., Nowosad J. and Muenchow J. (2019): [**Geocomputation with R**](https://geocompr.robinlovelace.net/), _Chapman & Hall/CRC_. -->
 * Gimond, M. (2019): [**Intro to GIS and Spatial Analysis**](https://mgimond.github.io/Spatial/index.html).
 * de Smith M.J., Goodchild M.F. and Longley P.A. (2018): [**Geospatial Analysis: A Comprehensive Guide to Principles, Techniques and Software Tools**](https://www.spatialanalysisonline.com/HTML/index.html), _The Winchelsea Press_. 
+* Scheider, S. and Huisjes, M.D. (2018): [**Distinguishing extensive and intensive properties for meaningful geocomputation and mapping**](https://www.researchgate.net/publication/328157903_Distinguishing_extensive_and_intensive_properties_for_meaningful_geocomputation_and_mapping), _International Journal of Geographical Information Science_, 33(1):28-54, doi: [10.1080/13658816.2018.1514120](https://doi.org/10.1080/13658816.2018.1514120).
 * Garrard C. (2016): **Geoprocessing with Python**, _Manning Publications_.
 * Westra E. (2016): [**Python Geospatial Development**](https://www.programmer-books.com/wp-content/uploads/2019/04/Python-Geospatial-Development-3rd-Edition.pdf), _PACKT Publishing_.
 * Bahgat K. (2016): **Python Geospatial Development Essentials**, _PACKT Publishing_.
