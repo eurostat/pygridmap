@@ -185,27 +185,27 @@ class GridOverlay(GridProcessor):
     
     #/************************************************************************/
     @classmethod
-    def crop_grid(cls, idx, gridbbox, cellsize, tilesize, grid, 
+    def crop_polygon(cls, idx, gridbbox, cellsize, tilesize, poly, keep_index = True,
                   preserve_tile = False, buff_geom_prec = None, sort = False):
         iy, ix = idx[:2]
         buff_geom_prec = buff_geom_prec or GridProcessor.TOL_EPS # or 0?
-        tilebbox = None
+        keep_index = cls.COL_GRIDX if keep_index is True else keep_index
         # create a single tile object for clipping
         if tilesize is True: 
             tilesize = cls.COL_TILE
         if isinstance(tilesize,str):
             if tilesize not in grid.columns:
                 raise IOError('tile column name not found')
-            index = grid[grid[tilesize] == iy].index
+            index = poly[poly[tilesize] == iy].index
         else:
             xmin, ymin, xmax, ymax = cls.get_tile_bbox(idx, cellsize, tilesize, gridbbox, False) # no crop
-            tilebbox = cls.bbox_to_polygon (xmin, ymin, xmax, ymax)
+            # tilebbox = cls.bbox_to_polygon (xmin, ymin, xmax, ymax)
             # retrieve the indexes of the grid cells within the considered tile
             if cellsize is None:
-                index = list(grid.sindex.intersection([xmin, ymin, xmax, ymax]))
-            elif cls.COL_X in grid.columns and cls.COL_Y in grid.columns:
-                index = grid[(grid[cls.COL_X] >= xmin) & (grid[cls.COL_X]  <= xmax) \
-                            & (grid[cls.COL_Y] >= ymin)  & (grid[cls.COL_Y] <= ymax)].index
+                index = list(poly.sindex.intersection([xmin, ymin, xmax, ymax]))
+            elif cls.COL_X in poly.columns and cls.COL_Y in poly.columns: # poly is a grid
+                index = poly[(poly[cls.COL_X] >= xmin) & (poly[cls.COL_X]  <= xmax) \
+                            & (poly[cls.COL_Y] >= ymin)  & (poly[cls.COL_Y] <= ymax)].index
             elif sort not in (False, None):
                 nygrid, nxgrid = tilesize
                 nrows, ncols = cls.get_grid_shape(cellsize, gridbbox)
@@ -215,21 +215,30 @@ class GridOverlay(GridProcessor):
                 # index = [(ix*nxgrid + i)*nrows + (iy*nygrid + j) for j in range(nygrid) for i in range(nxgrid)]
                 index = [ind for ind in index if ind<=nrows*ncols - 1]
             elif True:
-                bbox = tilebbox.buffer(-min(cellsize) * buff_geom_prec).bounds
-                index = list(grid.sindex.intersection(bbox))
+                bbox = (cls.bbox_to_polygon(xmin, ymin, xmax, ymax)
+                        .buffer(-min(cellsize) * buff_geom_prec)
+                        .bounds)
+                index = list(poly.sindex.intersection(bbox))
             else: # forget about this one
-                geometry = tilebbox.buffer(buff_geom_prec).geometry
+                geometry = (cls.bbox_to_polygon(xmin, ymin, xmax, ymax)
+                            .buffer(buff_geom_prec)
+                            .geometry)
                 clip_bbox = gpd.GeoDataFrame(geometry = [geometry], crs = grid.crs)
                 # buffer to solve inconsistent geometries
-                return gpd.clip(grid, clip_bbox, keep_geom_type = True)
+                return gpd.clip(poly, clip_bbox, keep_geom_type = True)
         if index is None or index is []:
             return tilebbox if preserve_tile is True else None
-        crop_grid = (grid
-                     .iloc[index] # .copy()
-                     .reset_index() # index reset at the level of the processing tile
-                     .rename(columns={'index': cls.COL_GRIDX})
+        if keep_index in (None, False):
+            return (poly
+                    .iloc[index]
+                    .copy()
+                   )
+        else:
+            return (poly
+                    .iloc[index] 
+                    .reset_index() # index reset at the level of the processing tile
+                    .rename(columns={'index': keep_index})
                     )
-        return crop_grid
     
     #/************************************************************************/
     @classmethod
@@ -276,8 +285,8 @@ class GridOverlay(GridProcessor):
         
     #/************************************************************************/
     @classmethod
-    def overlay_polygons(cls, poly1, poly2, how_overlay, buff_geom_prec = None, 
-                         keep_geom_type = True, preserve_polygon = False): 
+    def overlay_polygon(cls, poly1, poly2, how_overlay, buff_geom_prec = None, 
+                        keep_geom_type = True, preserve_polygon = False): 
         buff_geom_prec = buff_geom_prec or GridProcessor.TOL_EPS # or 0?
         if poly2 is None or poly2.is_empty.all():
             return poly1 if preserve_polygon is True else None
@@ -380,10 +389,10 @@ class GridOverlay(GridProcessor):
         clippoly = cls.clip_polygon(subgrid, polygons, 
                                     keep_geom_type = keep_geom_type,
                                     keep_index = True, keep_area = True)
-        overlay = cls.overlay_polygons(subgrid, clippoly, how_overlay, 
-                                       buff_geom_prec = buff_geom_prec, 
-                                       keep_geom_type = keep_geom_type, 
-                                       preserve_polygon = preserve_polygon)
+        overlay = cls.overlay_polygon(subgrid, clippoly, how_overlay, 
+                                      buff_geom_prec = buff_geom_prec, 
+                                      keep_geom_type = keep_geom_type, 
+                                      preserve_polygon = preserve_polygon)
         if overlay is None or overlay.is_empty.all():
             return None
         # udpate the attributes available in the overlay geometries to take into account the proportional 
@@ -410,8 +419,8 @@ class GridOverlay(GridProcessor):
                      buff_geom_prec, keep_geom_type, preserve_polygon, 
                      sort):
         # define the subgrid over the specific tile considered for processing
-        subgrid = cls.crop_grid(idx, gridbbox, cellsize, tilesize, grid, 
-                                preserve_tile = False, buff_geom_prec = buff_geom_prec, sort = sort) 
+        subgrid = cls.crop_polygon(idx, gridbbox, cellsize, tilesize, grid, keep_index = True,
+                                   preserve_tile = False, buff_geom_prec = buff_geom_prec, sort = sort) 
         if subgrid is None or subgrid.is_empty.all():
             return None        
         # define the overlay (e.g., how_overlay=intersection or union) geometries of both the polygons
@@ -506,11 +515,12 @@ class GridOverlay(GridProcessor):
         for ix in ixtiles:
             for iy in iytiles:
                 if memory_split is True:
-                    subgrid = self.crop_grid([iy, ix, nytiles, nxtiles], 
-                                             gridbbox, cellsize, tilesize, grid,  
-                                             preserve_tile = False, 
-                                             buff_geom_prec = self.buff_geom_prec,
-                                             sort = self.sorted) 
+                    subgrid = self.crop_polygon([iy, ix, nytiles, nxtiles], 
+                                                gridbbox, cellsize, tilesize, grid,  
+                                                keep_index = True,
+                                                preserve_tile = False, 
+                                                buff_geom_prec = self.buff_geom_prec,
+                                                sort = self.sorted) 
                     if subgrid is None or subgrid.is_empty.all():
                         continue        
                 olay_tile.append(pool.apply_async(self.processor,
@@ -526,7 +536,7 @@ class GridOverlay(GridProcessor):
         pool.close()
         pool.join()
         olay = pd.concat([t.get() for t in olay_tile if t is not None], 
-                         axis=0, ignore_index=True)
+                         axis = 0, ignore_index = True)
         if drop != False: 
             if drop is True:
                 drop = [self.COL_TILE, self.COL_INTERSECTS, self.COL_WITHIN, self.COL_POLIDX] #__drops
