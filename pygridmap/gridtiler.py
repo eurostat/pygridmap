@@ -156,6 +156,13 @@ def grid_tiling(
 
 
 def csv_to_parquet(folder_path, clean=False, compression='snappy'):
+    """Convert CSV tiled data into parquet format
+
+    Args:
+        folder_path (str): The data folder
+        clean (bool, optional): Set to true to delete the initial CSV files in the end of the process. Otherwise, they will be kept. Defaults to False.
+        compression (str, optional): The parquet compression. Be aware gridviz-parquet supports only snappy encodings, currently. Defaults to "snappy".
+    """    
     for root, _, files in os.walk(folder_path):
         for file in files:
             if not file.endswith('.csv'): continue
