@@ -192,14 +192,14 @@ def csv_to_parquet(folder_path, clean=False, compression='snappy'):
 
 
 def grid_transformation(input_file, function, output_file, input_file_delimiter = ",", output_file_delimiter = ","):
-    """transform CSV
+    """transform CSV data.
 
     Args:
-        input_file (_type_): _description_
-        function (_type_): _description_
-        output_file (_type_): _description_
-        input_file_delimiter (str, optional): _description_. Defaults to ",".
-        output_file_delimiter (str, optional): _description_. Defaults to ",".
+        input_file (str): The path to the input grid as CSV file. One row per grid cell.
+        function (dict): The function to apply to a cell row element, as a dictionnary. Properties can be added and removed within this function.
+        output_file (str): The path to the output grid as CSV file. One row per grid cell.
+        input_file_delimiter (str, optional): The CSV delimiter of the input file. Defaults to ",".
+        output_file_delimiter (str, optional): The CSV delimiter of the output file. Defaults to ",".
     """    
 
     #open file to read
