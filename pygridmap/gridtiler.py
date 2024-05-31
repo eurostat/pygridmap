@@ -67,15 +67,17 @@ def grid_tiling(
     #compute tile size, in geo unit
     tile_size_m = resolution * tile_size_cell
 
-    #minimum and maximum tile x,x, for info.json file
+    #minimum and maximum tile x,y, for info.json file
     minTX=None
     maxTX=None
     minTY=None
     maxTY=None
 
     #clean output folder and create it
-    if clean_output_folder and os.path.exists(output_folder): shutil.rmtree(output_folder)
-    if not os.path.exists(output_folder): os.makedirs(output_folder)
+    if clean_output_folder and os.path.exists(output_folder):
+        shutil.rmtree(output_folder)
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
 
     #open file with data to tile
     with open(input_file, 'r') as csvfile:
@@ -113,16 +115,24 @@ def grid_tiling(
 
             #create folder
             t_folder = output_folder + "/" + str(xt) + "/"
-            if not os.path.exists(t_folder): os.makedirs(t_folder)
+            if not os.path.exists(t_folder):
+                os.makedirs(t_folder)
 
+            #open tiled CSV file of create it if it does not exists
             file_path = t_folder + str(yt) + ".csv"
             file_exists = os.path.exists(file_path)
             with open(file_path, 'a', newline='') as csvfile:
-                #writer
-                if csv_header==None: csv_header = get_csv_header(c)
+
+                #get header
+                if csv_header==None:
+                    csv_header = get_csv_header(c)
+
+                #get writer
                 writer = csv.DictWriter(csvfile, fieldnames=csv_header, delimiter=output_file_delimiter)
-                #write header
+
+                #write header if the file was just created
                 if not file_exists: writer.writeheader()
+
                 #write cell data
                 writer.writerow(c)
 
