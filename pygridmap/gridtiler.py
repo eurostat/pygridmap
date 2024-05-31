@@ -245,6 +245,17 @@ def grid_aggregation(
     input_file_delimiter = ",",
     output_file_delimiter = ","
 ):
+    """Aggregate grid data to a lower resolution. NB: in this version, the aggregated values are the sum of the value - other functions to be available soon.
+
+    Args:
+        input_file (str): The path to the input grid as CSV file. One row per grid cell. This CSV file should include a x and y columns containing the coordinates of the lower left corner of the cell. If this is not the case, use grid_transform function for example.
+        resolution (float): The resolution of the input grid in the CRS UoM (usually meters).
+        output_file (str): The path to the output grid as CSV file.
+        a (int): Aggregation factor. The resolution of the output data is a multiple of the input resolution: a x resolution
+        aggregation_rounding (int, optional): The number of decimal places to keep for the aggregated figures. Defaults to 6.
+        input_file_delimiter (str, optional): The CSV delimiter of the input file. Defaults to ",".
+        output_file_delimiter (str, optional): The CSV delimiter of the output file. Defaults to ",".
+    """
 
     # the aggregated cells, indexed by xa and then ya
     aggregation_index = {}
@@ -338,8 +349,16 @@ def grid_aggregation(
 
 
 
-#make csv header from a cell, starting with "x" and "y"
+
 def get_csv_header(cell):
+    """Make csv header from a cell, starting with "x" and "y".
+
+    Args:
+        cell (dict): A grid cell, as a dictionnary
+
+    Returns:
+        list(str): The CSV header.
+    """
     keys = list(cell.keys())
     keys.remove("x")
     keys.remove("y")
@@ -347,8 +366,13 @@ def get_csv_header(cell):
     keys.insert(1, "y")
     return keys
 
-#convert rounded floats into ints so that we do not have useless ".0"
+
+
 def round_floats_to_ints(cell):
+    """ Convert rounded floats into ints so that we do not have useless ".0".
+    Args:
+        cell (dict): A grid cell, as a dictionnary
+    """
     for key, value in cell.items():
         try:
             f = float(value)
