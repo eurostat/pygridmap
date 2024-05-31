@@ -24,9 +24,8 @@ Base module enabling basic data processing and grid geoprocessing.
 
 #%% Settings     
 
-import  functools
+import functools
 
-import json
 import math
 import numpy as np
 
