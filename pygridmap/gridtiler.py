@@ -37,8 +37,8 @@ def grid_tiling(
     output_folder,
     resolution,
     tile_size_cell = 128,
-    x_origin = 0,
-    y_origin = 0,
+    x_origin = 0.0,
+    y_origin = 0.0,
     crs = "",
     clean_output_folder = False,
     input_file_delimiter = ",",
@@ -46,6 +46,23 @@ def grid_tiling(
     format = "csv",
     parquet_compression = "snappy"
 ):
+    """Tile an input CSV file.
+
+    Args:
+        input_file (str): The path to the input grid as CSV file. One row per grid cell. This CSV file should include a x and y columns containing the coordinates of the lower left corner of the cell. If this is not the case, use grid_transform function for example.
+        output_folder (str): The path to the output folder where to store the tiles.
+        resolution (float): The resolution of the input grid in the CRS UoM (usually meters).
+        tile_size_cell (int, optional): The size of a tile, in number of cells. Defaults to 128.
+        x_origin (float, optional): The x coordinate of the tiling scheme origin point. Defaults to 0.
+        y_origin (float, optional): The y coordinate of the tiling scheme origin point. Defaults to 0.
+        crs (str, optional): A text describing the grid CRS. Defaults to "".
+        clean_output_folder (bool, optional): Set to True to delete the content of the output folder in the beginning: Be careful the output folder is well specified ! Defaults to False.
+        input_file_delimiter (str, optional): The CSV delimiter of the input file. Defaults to ",".
+        output_file_delimiter (str, optional): The CSV delimiter of the output file. Defaults to ",".
+        format (str, optional): The output file encodings format, either "csv" of "parquet". Defaults to "csv".
+        parquet_compression (str, optional): The parquet compression. Be aware gridviz-parquet supports only snappy encodings, currently. Defaults to "snappy".
+    """
+
 
     #compute tile size, in geo unit
     tile_size_m = resolution * tile_size_cell
