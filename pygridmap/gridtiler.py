@@ -182,6 +182,15 @@ def csv_to_parquet(folder_path, clean=False, compression='snappy'):
 
 
 def grid_transformation(input_file, function, output_file, input_file_delimiter = ",", output_file_delimiter = ","):
+    """transform CSV
+
+    Args:
+        input_file (_type_): _description_
+        function (_type_): _description_
+        output_file (_type_): _description_
+        input_file_delimiter (str, optional): _description_. Defaults to ",".
+        output_file_delimiter (str, optional): _description_. Defaults to ",".
+    """    
 
     #open file to read
     with open(input_file, 'r') as infile:
