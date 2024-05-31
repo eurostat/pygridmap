@@ -22,7 +22,6 @@ Tile gridded data for visualisation with GridViz javascript library.
 
 #%% Settings     
 
-
 import os
 import csv
 from math import floor
