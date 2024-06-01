@@ -386,7 +386,7 @@ def aggregation_average_2(values, nb):
 
 
 def aggregation_single_value(values, _):
-    """single value: return one of the cell values, the first one/
+    """single value: return one of the cell values, the first one.
 
     Args:
         values (str): The values to aggregate
@@ -396,7 +396,6 @@ def aggregation_single_value(values, _):
         float: The aggregated value
     """
     return values[0]
-
 
 
 
