@@ -253,6 +253,7 @@ def grid_aggregation(
         resolution (float): The resolution of the input grid in the CRS UoM (usually meters).
         output_file (str): The path to the output grid as CSV file.
         a (int): Aggregation factor. The resolution of the output data is a multiple of the input resolution: a x resolution
+        aggregation_fun (dict): Dictionnary of aggregation functions. The dictionnary keys are the cell attributes. The dictionnary values are the corresponding aggregation function to use for the column. If not specified, sum is used as aggregation function.
         aggregation_rounding (int, optional): The number of decimal places to keep for the aggregated figures. Defaults to 6.
         input_file_delimiter (str, optional): The CSV delimiter of the input file. Defaults to ",".
         output_file_delimiter (str, optional): The CSV delimiter of the output file. Defaults to ",".
@@ -382,6 +383,19 @@ def aggregation_average_2(values, nb):
     """
     sum = aggregation_sum(values)
     return sum/nb
+
+
+def aggregation_single_value(values, _):
+    """single value: return one of the cell values, the first one/
+
+    Args:
+        values (str): The values to aggregate
+        _ (int): unused
+
+    Returns:
+        float: The aggregated value
+    """
+    return values[0]
 
 
 
