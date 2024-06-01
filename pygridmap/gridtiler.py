@@ -336,7 +336,7 @@ def grid_aggregation(
 
 
 
-#aggregation functions
+#some pre-defined aggregation functions
 
 def aggregation_sum(values, _=0):
     """sum
