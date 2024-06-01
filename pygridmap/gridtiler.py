@@ -241,6 +241,7 @@ def grid_aggregation(
     resolution,
     output_file,
     a,
+    aggregation_fun = {},
     aggregation_rounding = 6,
     input_file_delimiter = ",",
     output_file_delimiter = ","
@@ -291,19 +292,9 @@ def grid_aggregation(
 
     print("aggregation computation...")
 
-    #aggregation function
-    #TODO handle other cases: average, mode, etc
-    def aggregation_fun(values):
-        sum = 0
-        for value in values:
-            if value == "" or value == None: continue
-            sum += float(value)
-        return sum
-
     #prepare function to round aggregated figures
     tolerance = pow(10, aggregation_rounding)
     round_to_tolerance = lambda number : round(number * tolerance) / tolerance
-
 
     writer = None
     with open(output_file, 'w') as outfile:
@@ -321,8 +312,10 @@ def grid_aggregation(
                     #get list of values to aggregate
                     values = []
                     for c in cells: values.append(c[k])
+                    #get aggregation function from dictionnary, or use sum by default
+                    af = aggregation_fun[k] if k in aggregation_fun else aggregation_sum
                     #compute and set aggregated value
-                    cA[k] = aggregation_fun(values)
+                    cA[k] = af(values, a*a)
                     if (aggregation_rounding != None): cA[k] = round_to_tolerance(cA[k])
 
                 #if not, create writer and write header
@@ -343,6 +336,52 @@ def grid_aggregation(
 
 
 
+#aggregation functions
+
+def aggregation_sum(values, _=0):
+    """sum
+
+    Args:
+        values (float): The values to aggregate
+        _ (int): unused
+
+    Returns:
+        float: The aggregated value
+    """    
+    sum = 0
+    for value in values:
+        if value == "" or value == None: continue
+        sum += float(value)
+    return sum
+
+
+def aggregation_average(values, _):
+    """average: the sum of values, divided by the number of values
+
+    Args:
+        values (float): The values to aggregate
+        _ (int): unused
+
+    Returns:
+        float: The aggregated value
+    """
+    nb = len(values)
+    if nb==0: return
+    return aggregation_sum(values) / nb
+
+
+def aggregation_average_2(values, nb):
+    """average: the sum of values, divided by the total number of aggregated cells
+
+    Args:
+        values (float): The values to aggregate
+        nb (int): The number of cells to aggregate (a x a)
+
+    Returns:
+        float: The aggregated value
+    """
+    sum = aggregation_sum(values)
+    return sum/nb
 
 
 
