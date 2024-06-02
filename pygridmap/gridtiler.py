@@ -30,8 +30,6 @@ import shutil
 import pandas as pd
 
 
-#TODO geotiff/image input
-
 def grid_tiling(
     input_file,
     output_folder,

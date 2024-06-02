@@ -35,5 +35,5 @@ PACKPATH            = osp.dirname(__file__)
 """Path to this package.
 """
 
-__all__             = ['base', 'gridding', 'overlay', 'gridtiler']#analysis:ignore
+__all__             = ['base', 'gridding', 'overlay', 'gridtiler', 'gridtiler_raster']#analysis:ignore
 __all__.extend(['__version__']) # , '__start__'
