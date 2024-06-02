@@ -32,10 +32,10 @@ import json
 import pandas as pd
 
 
-def _tiling_(values_calculator, resolution, output_folder, x_origin, y_origin, x_min, y_min, x_max, y_max, tile_size_cell=128, crs="", format="csv", compression="snappy"):
+def _tiling_(values_calculator, output_folder, resolution_out, x_origin, y_origin, x_min, y_min, x_max, y_max, tile_size_cell=128, crs="", format="csv", parquet_compression="snappy"):
 
     #tile frame caracteristics
-    tile_size_geo = resolution * tile_size_cell
+    tile_size_geo = resolution_out * tile_size_cell
     tile_min_x = floor( (x_min - x_origin) / tile_size_geo )
     tile_min_y = floor( (y_min - y_origin) / tile_size_geo )
     tile_max_x = ceil( (x_max - x_origin) / tile_size_geo )
@@ -74,8 +74,8 @@ def _tiling_(values_calculator, resolution, output_folder, x_origin, y_origin, x
                     #get values
                     for key in keys:
                         #compute geo coordinate
-                        xc = x_origin + xt * tile_size_geo + xtc*resolution
-                        yc = y_origin + yt * tile_size_geo + ytc*resolution
+                        xc = x_origin + xt * tile_size_geo + xtc*resolution_out
+                        yc = y_origin + yt * tile_size_geo + ytc*resolution_out
 
                         #check limits
                         if xc<x_min: continue
@@ -155,7 +155,7 @@ def _tiling_(values_calculator, resolution, output_folder, x_origin, y_origin, x
             #load csv file            
             df = pd.read_csv(cfp)
             #save as parquet            
-            df.to_parquet(fo + str(yt) + ".parquet", engine='pyarrow', compression=compression, index=False)
+            df.to_parquet(fo + str(yt) + ".parquet", engine='pyarrow', compression=parquet_compression, index=False)
             #delete csv file
             os.remove(cfp)
 
@@ -169,7 +169,7 @@ def _tiling_(values_calculator, resolution, output_folder, x_origin, y_origin, x
             "x": x_origin,
             "y": y_origin
         },
-        "resolutionGeo": resolution,
+        "resolutionGeo": resolution_out,
         "tilingBounds": {
             "yMin": min_ty,
             "yMax": max_ty,
@@ -184,23 +184,23 @@ def _tiling_(values_calculator, resolution, output_folder, x_origin, y_origin, x
 
 
 
-def tiling_raster(rasters, output_folder, resolution, x_min, y_min, x_max, y_max, x_origin=None, y_origin=None, crs="", tile_size_cell=128, format="csv", compression="snappy"):
+def tiling_raster(rasters, output_folder, resolution_out, x_min, y_min, x_max, y_max, x_origin=None, y_origin=None, crs="", tile_size_cell=128, format="csv", parquet_compression="snappy"):
     """Tile gridded statistics from raster files.
 
     Args:
         rasters (dict): A dictionnary with all data on the attributes and the raster file they are retrieved from.
-        output_folder (str): _description_
-        resolution (_type_): _description_
-        x_min (_type_): _description_
-        y_min (_type_): _description_
-        x_max (_type_): _description_
-        y_max (_type_): _description_
-        x_origin (_type_, optional): _description_. Defaults to None.
-        y_origin (_type_, optional): _description_. Defaults to None.
-        crs (str, optional): _description_. Defaults to "".
-        tile_size_cell (int, optional): _description_. Defaults to 128.
-        format (str, optional): _description_. Defaults to "csv".
-        compression (str, optional): _description_. Defaults to "snappy".
+        output_folder (str): The path to the output folder where to store the tiles.
+        resolution_out (float): The resolution of the output grid in the CRS UoM (usually meters).
+        x_min (float): The extent to be tiled
+        y_min (float): The extent to be tiled
+        x_max (float): The extent to be tiled
+        y_max (float): The extent to be tiled
+        x_origin (float, optional): The origin position - if not specified, x_min is used. Defaults to None.
+        y_origin (float, optional): The origin position - if not specified, y_min is used. Defaults to None.
+        crs (str, optional): A text describing the grid CRS. Defaults to "".
+        tile_size_cell (int, optional): The size of a tile, in number of cells. Defaults to 128.
+        format (str, optional): The output file encodings format, either "csv" of "parquet". Defaults to "csv".
+        parquet_compression (str, optional): The parquet compression. Be aware gridviz-parquet supports only snappy encodings, currently. Defaults to "snappy".
 
     Returns:
         _type_: _description_
@@ -209,6 +209,8 @@ def tiling_raster(rasters, output_folder, resolution, x_min, y_min, x_max, y_max
     #set origin, if not specified
     if x_origin==None: x_origin=x_min
     if y_origin==None: y_origin=y_min
+
+    r2 = resolution_out/2
 
     def get_values_calculator(file, band, no_data_values=[]):
         #open file
@@ -231,11 +233,10 @@ def tiling_raster(rasters, output_folder, resolution, x_min, y_min, x_max, y_max
 
 
     values_calculator = {}
-    r2 = resolution/2
     for label in rasters:
         entry = rasters[label]
         no_data_values = entry["no_data_values"] if "no_data_values" in entry else []
         values_calculator[label] = get_values_calculator(entry["file"], entry["band"], no_data_values)
 
     #tiling
-    _tiling_(values_calculator, resolution, output_folder, x_origin, y_origin, x_min, y_min, x_max, y_max, tile_size_cell, crs, format, compression)
+    _tiling_(values_calculator, output_folder, resolution_out, x_origin, y_origin, x_min, y_min, x_max, y_max, tile_size_cell, crs, format, parquet_compression)
