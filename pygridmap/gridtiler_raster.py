@@ -1,3 +1,28 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+"""
+.. _gridtiler_raster
+
+.. Links
+.. _Eurostat: http://ec.europa.eu/eurostat/web/main
+.. |Eurostat| replace:: `Eurostat <Eurostat_>`_
+
+Tile gridded data from raster files for visualisation with GridViz javascript library.
+
+**Dependencies**
+
+*require*:      :mod:`os`, :mod:`csv`, :mod:`math`, :mod:`json`, :mod:`rasterio`, :mod:`rasterio.transform `, :mod:`panda`
+
+**Contents**
+"""
+
+# *credits*:      `jgaffuri <julien.gaffuri@ec.europa.eu>`_ 
+# *since*:        May 2024
+
+#%% Settings     
+
+
 import rasterio
 from rasterio.transform import rowcol
 from math import ceil,floor
