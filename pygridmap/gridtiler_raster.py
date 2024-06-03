@@ -24,14 +24,13 @@ Tile gridded data from raster files for visualisation with GridViz javascript li
 
 
 import rasterio
-from rasterio.transform import rowcol
 from math import ceil,floor
 import os
 import csv
 import json
 import pandas as pd
 import concurrent.futures
-
+import numpy as np
 
 
 
@@ -61,34 +60,16 @@ def tiling_raster(rasters, output_folder, resolution_out, x_min, y_min, x_max, y
     if x_origin==None: x_origin=x_min
     if y_origin==None: y_origin=y_min
 
-    r2 = resolution_out/2
-
-    def get_values_calculator(file, band, no_data_values=[]):
-        #open file
-        raster = rasterio.open(file)
-        transform = raster.transform
-
-        #value to ignore
-        nodata = raster.meta["nodata"]
-
-        data = raster.read(band)
-
-        def fun(x_cell,y_cell):
-            row, col = rowcol(transform, x_cell+r2, y_cell+r2)
-            if col>=raster.width or col<0: return None
-            if row>=raster.height or row <0: return None
-            pixel_value = data[row,col]
-            if pixel_value == nodata or pixel_value in no_data_values: return None
-            return pixel_value
-        return fun
-
-
-    values_calculator = {}
+    #prepare and load raster file data
     for label in rasters:
-        entry = rasters[label]
-        no_data_values = entry["no_data_values"] if "no_data_values" in entry else []
-        values_calculator[label] = get_values_calculator(entry["file"], entry["band"], no_data_values)
-
+        raster = rasters[label]
+        #open file
+        src = rasterio.open(raster["file"])
+        raster["src"] = src
+        #raster["mmap"] = src.read(1, out_shape=(1, src.height, src.width), masked=True)
+        raster["nodata"] = src.meta["nodata"]
+        raster["data"] = src.read(raster["band"])
+        if not "no_data_values" in raster: raster["no_data_values"] = []
 
     #tile frame caracteristics
     tile_size_geo = resolution_out * tile_size_cell
@@ -97,8 +78,10 @@ def tiling_raster(rasters, output_folder, resolution_out, x_min, y_min, x_max, y
     tile_max_x = ceil( (x_max - x_origin) / tile_size_geo )
     tile_max_y = ceil( (y_max - y_origin) / tile_size_geo )
 
+    r2 = resolution_out/2
+
     #get keys
-    keys = values_calculator.keys()
+    keys = rasters.keys()
 
     #function to make cell template
     def build_cell():
@@ -107,13 +90,53 @@ def tiling_raster(rasters, output_folder, resolution_out, x_min, y_min, x_max, y
         return c
 
     #function to make a tile
-
     def make_tile(xyt):
         [xt, yt] = xyt
         print("tile",xt,yt)
 
         #prepare tile cells
         cells = []
+
+
+        #TODO use memory mapping ?
+        #mmap = src.read(1, out_shape=(1, src.height, src.width), masked=True)
+        #value = mmap[src.index(x, y)]
+
+        #TODO: get all values of the tile in one go ?
+        '''
+        for key in keys:
+            min_x = x_origin + xt * tile_size_geo
+            max_x = x_origin + xt * tile_size_geo + (tile_size_cell-1)*resolution_out
+            min_y = y_origin + yt * tile_size_geo
+            max_y = y_origin + yt * tile_size_geo + (tile_size_cell-1)*resolution_out
+            x_coords = np.linspace(min_x, max_x, tile_size_cell) #use range ?
+            y_coords = np.linspace(min_y, max_y, tile_size_cell)
+            grid_coords = [(x, y) for x in x_coords for y in y_coords]
+
+            #convert the geographical coordinates to pixel coordinates
+            src = rasters[key]["src"]
+            pixel_coords = [src.index(x, y) for x, y in grid_coords]
+
+            # Get the min and max rows and columns to determine the bounding window
+            rows, cols = zip(*pixel_coords)
+            min_row, max_row = min(rows), max(rows)
+            min_col, max_col = min(cols), max(cols)
+
+            # Read the window that covers all the grid points
+            window = rasterio.windows.Window(min_col, min_row, max_col - min_col + 1, max_row - min_row + 1)
+            data = src.read(1, window=window)
+            # Extract values at the specific rows and columns
+            values = [data[row - min_row, col - min_col] for row, col in pixel_coords]
+
+            #build matrix of cell templates
+            cells = []
+            for xtc in range(0, tile_size_cell):
+                c = []
+                cells.append(c)
+                for ytc in range(0, tile_size_cell):
+                    c.append(build_cell())
+        '''
+
 
         for xtc in range(0, tile_size_cell):
             for ytc in range(0, tile_size_cell):
@@ -122,23 +145,29 @@ def tiling_raster(rasters, output_folder, resolution_out, x_min, y_min, x_max, y
                 #new cell
                 cell = None
 
+                #compute geo coordinate
+                xc = x_origin + xt * tile_size_geo + xtc*resolution_out
+                yc = y_origin + yt * tile_size_geo + ytc*resolution_out
+
+                #check limits
+                if xc<x_min: continue
+                if xc>x_max: continue
+                if yc<y_min: continue
+                if yc>y_max: continue
+
                 #get values
                 for key in keys:
-                    #compute geo coordinate
-                    xc = x_origin + xt * tile_size_geo + xtc*resolution_out
-                    yc = y_origin + yt * tile_size_geo + ytc*resolution_out
-
-                    #check limits
-                    if xc<x_min: continue
-                    if xc>x_max: continue
-                    if yc<y_min: continue
-                    if yc>y_max: continue
 
                     #get value
-                    v = values_calculator[key](xc, yc)
+                    raster = rasters[key]
+                    src = raster["src"]
+                    #v = raster["mmap"][src.index(xc+r2, yc+r2)]
+                    row, col = src.index(xc+r2, yc+r2)
+                    if col>=src.width or col<0: continue
+                    if row>=src.height or row <0: continue
+                    v = raster["data"][row,col]
 
-                    #
-                    if v==None: continue
+                    if v == raster["nodata"] or v in raster["no_data_values"]: continue
 
                     #if not built, build cell
                     if cell == None: cell = build_cell()
