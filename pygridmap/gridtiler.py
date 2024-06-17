@@ -416,11 +416,17 @@ def get_csv_header(cell):
     Returns:
         list(str): The CSV header.
     """
+
+    #get keys
     keys = list(cell.keys())
-    keys.remove("x")
-    keys.remove("y")
-    keys.insert(0, "x")
-    keys.insert(1, "y")
+
+    #ensure x and y columns are the first ones
+    if "x" in keys and "y" in keys:
+        keys.remove("x")
+        keys.remove("y")
+        keys.insert(0, "x")
+        keys.insert(1, "y")
+
     return keys
 
 
