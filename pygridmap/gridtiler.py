@@ -42,7 +42,8 @@ def grid_tiling(
     input_file_delimiter = ",",
     output_file_delimiter = ",",
     format = "csv",
-    parquet_compression = "snappy"
+    parquet_compression = "snappy",
+    file_extension = None
 ):
     """Tile an input CSV file.
 
@@ -59,8 +60,11 @@ def grid_tiling(
         output_file_delimiter (str, optional): The CSV delimiter of the output file. Defaults to ",".
         format (str, optional): The output file encodings format, either "csv" of "parquet". Defaults to "csv".
         parquet_compression (str, optional): The parquet compression. Be aware gridviz-parquet supports only snappy encodings, currently. Defaults to "snappy".
+        file_extension (str, optional): The file extension. Defaults to same as format.
     """
 
+    #set file extension if not specified
+    if file_extension == None: file_extension = format
 
     #compute tile size, in geo unit
     tile_size_m = resolution * tile_size_cell
@@ -117,7 +121,7 @@ def grid_tiling(
                 os.makedirs(t_folder)
 
             #open tiled CSV file of create it if it does not exists
-            file_path = t_folder + str(yt) + ".csv"
+            file_path = t_folder + str(yt) + "." + file_extension
             file_exists = os.path.exists(file_path)
             with open(file_path, 'a', newline='') as csvfile:
 
@@ -159,24 +163,25 @@ def grid_tiling(
     if format == "csv": return
 
     #parquet format
-    csv_to_parquet(output_folder, clean=True, compression=parquet_compression)
+    csv_to_parquet(output_folder, clean=True, compression=parquet_compression, file_extension=file_extension)
 
 
 
-def csv_to_parquet(folder_path, clean=False, compression='snappy'):
+def csv_to_parquet(folder_path, clean=False, compression='snappy', file_extension='parquet'):
     """Convert CSV tiled data into parquet format
 
     Args:
         folder_path (str): The data folder
         clean (bool, optional): Set to true to delete the initial CSV files in the end of the process. Otherwise, they will be kept. Defaults to False.
         compression (str, optional): The parquet compression. Be aware gridviz-parquet supports only snappy encodings, currently. Defaults to "snappy".
+        file_extension (str, optional): The file extension. Defaults to "parquet".
     """    
     for root, _, files in os.walk(folder_path):
         for file in files:
             if not file.endswith('.csv'): continue
 
             csv_file_path = os.path.join(root, file)
-            parquet_file_path = os.path.splitext(csv_file_path)[0] + '.parquet'
+            parquet_file_path = os.path.splitext(csv_file_path)[0] + '.' + file_extension
 
             #load csv file            
             df = pd.read_csv(csv_file_path)
