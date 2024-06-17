@@ -213,7 +213,12 @@ def grid_transformation(input_file, function, output_file, input_file_delimiter 
             for c in csvreader:
 
                 #apply function
-                function(c)
+                out = function(c)
+
+                #filter out
+                if out == False: continue
+
+                #to save space, by removing the ".0"
                 round_floats_to_ints(c)
 
                 #create writer, if necessary, write file header
