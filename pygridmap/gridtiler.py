@@ -28,7 +28,7 @@ from math import floor
 import json
 import shutil
 import pandas as pd
-
+import numbers
 
 def grid_tiling(
     input_file,
@@ -325,7 +325,7 @@ def grid_aggregation(
                     af = aggregation_fun[k] if k in aggregation_fun else aggregation_sum
                     #compute and set aggregated value
                     cA[k] = af(values, a*a)
-                    if (aggregation_rounding != None): cA[k] = round_to_tolerance(cA[k])
+                    if (aggregation_rounding != None and isinstance(cA[k], numbers.Number)): cA[k] = round_to_tolerance(cA[k])
 
                 #if not, create writer and write header
                 if writer == None:
