@@ -122,7 +122,7 @@ def grid_tiling(
 
             #open tiled CSV file of create it if it does not exists
             file_path = t_folder + str(yt) + "." + (file_extension if format=="csv" else "csv")
-            file_exists = os.path.exists(file_path)
+            
             with open(file_path, 'a', newline='') as csvfile:
 
                 #get header
@@ -132,8 +132,8 @@ def grid_tiling(
                 #get writer
                 writer = csv.DictWriter(csvfile, fieldnames=csv_header, delimiter=output_file_delimiter)
 
-                #write header if the file was just created
-                if not file_exists: writer.writeheader()
+                #write header
+                writer.writeheader()
 
                 #write cell data
                 writer.writerow(c)
