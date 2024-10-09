@@ -392,6 +392,24 @@ def aggregation_average_2(values, nb):
     sum = aggregation_sum(values)
     return sum/nb
 
+def aggregation_average_3(values, _):
+    """average: the sum of not None values, divided by the total number aggregated cells with value
+
+    Args:
+        values (float): The values to aggregate
+        _ (int): unused
+        
+    Returns:
+        float: The aggregated value
+    """
+    validValue=[float(x) for x in values if x !='']
+
+    if len(validValue)>0:
+        agg_avg=sum(validValue)/len(validValue)
+    else:
+        agg_avg=None
+    return agg_avg
+
 
 def aggregation_single_value(values, _):
     """single value: return one of the cell values, the first one.
@@ -445,6 +463,7 @@ def round_floats_to_ints(cell):
         try:
             f = float(value)
             if f.is_integer(): cell[key] = int(f)
-        except Error: pass
+        except ValueError: pass
+        except TypeError: pass
 
 
