@@ -445,6 +445,6 @@ def round_floats_to_ints(cell):
         try:
             f = float(value)
             if f.is_integer(): cell[key] = int(f)
-        except ValueError: pass
+        except Error: pass
 
 
