@@ -133,7 +133,7 @@ def grid_tiling(
                 writer = csv.DictWriter(csvfile, fieldnames=csv_header, delimiter=output_file_delimiter)
 
                 #write header
-                writer.writeheader()
+                if not file_exists: writer.writeheader()
 
                 #write cell data
                 writer.writerow(c)
