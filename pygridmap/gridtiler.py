@@ -132,7 +132,7 @@ def grid_tiling(
                 #get writer
                 writer = csv.DictWriter(csvfile, fieldnames=csv_header, delimiter=output_file_delimiter)
 
-                #write header if the file was just created
+                #write header
                 if not file_exists: writer.writeheader()
 
                 #write cell data
@@ -164,6 +164,110 @@ def grid_tiling(
 
     #parquet format
     csv_to_parquet(output_folder, clean=True, compression=parquet_compression, file_extension=file_extension)
+
+def grid_tiling_v2(
+    input_file,
+    output_folder,
+    resolution,
+    tile_size_cell = 128,
+    x_origin = 0.0,
+    y_origin = 0.0,
+    crs = "",
+    clean_output_folder = False,
+    input_file_delimiter = ",",
+    output_file_delimiter = ",",
+    format = "csv",
+    parquet_compression = "snappy",
+    file_extension = None
+):
+    """Tile an input CSV file.
+
+    Args:
+        input_file (str): The path to the input grid as CSV file. One row per grid cell. This CSV file should include a x and y columns containing the coordinates of the lower left corner of the cell. If this is not the case, use grid_transform function for example.
+        output_folder (str): The path to the output folder where to store the tiles.
+        resolution (float): The resolution of the input grid in the CRS UoM (usually meters).
+        tile_size_cell (int, optional): The size of a tile, in number of cells. Defaults to 128.
+        x_origin (float, optional): The x coordinate of the tiling scheme origin point. Defaults to 0.
+        y_origin (float, optional): The y coordinate of the tiling scheme origin point. Defaults to 0.
+        crs (str, optional): A text describing the grid CRS. Defaults to "".
+        clean_output_folder (bool, optional): Set to True to delete the content of the output folder in the beginning: Be careful the output folder is well specified ! Defaults to False.
+        input_file_delimiter (str, optional): The CSV delimiter of the input file. Defaults to ",".
+        output_file_delimiter (str, optional): The CSV delimiter of the output file. Defaults to ",".
+        format (str, optional): The output file encodings format, either "csv" of "parquet". Defaults to "csv".
+        parquet_compression (str, optional): The parquet compression. Be aware gridviz-parquet supports only snappy encodings, currently. Defaults to "snappy".
+        file_extension (str, optional): The file extension. Defaults to same as format.
+    """
+
+    #set file extension if not specified
+    if file_extension == None: file_extension = format
+
+    #compute tile size, in geo unit
+    tile_size_m = resolution * tile_size_cell
+
+    #minimum and maximum tile x,y, for info.json file
+    minTX=None
+    maxTX=None
+    minTY=None
+    maxTY=None
+
+    #clean output folder and create it
+    if clean_output_folder and os.path.exists(output_folder):
+        shutil.rmtree(output_folder)
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
+
+    df = pd.read_csv(input_file, delimiter=",")
+    df["x"]=df["x"].astype(float)
+    df["y"]=df["y"].astype(float)
+    df['xt'] = ((df['x'] - x_origin) // tile_size_m).apply(lambda x :int(floor(x)))
+    df['yt'] = ((df['y'] - y_origin) // tile_size_m).apply(lambda x :int(floor(x)))
+
+    minTX=df["xt"].min()
+    maxTX=df["xt"].max()
+    minTY=df["yt"].min()
+    maxTY=df["yt"].max()
+
+    df["x"]=((df["x"] - x_origin) / resolution - df["xt"] * tile_size_cell).apply(lambda x: int(floor(x)))
+    df["y"]=((df["y"] - x_origin) / resolution - df["yt"] * tile_size_cell).apply(lambda x: int(floor(x)))
+
+    if df[df["x"]<0].shape[0]>0 : print("Too low x values")
+    if df[df["y"]<0].shape[0]>0 : print("Too low y values")
+    if df[df["x"]>tile_size_cell - 1].shape[0]>0 : print("Too high x values")
+    if df[df["y"]>tile_size_cell - 1].shape[0]>0 : print("Too high y values")
+
+    #TODO : Find replacement for this fonction
+    #df.apply(round_floats_to_ints, axis=0) 
+
+    
+    for (xt, yt), tiles in df.groupby(['xt', 'yt']):
+        tile_dir = os.path.join(output_folder, str(xt))
+        os.makedirs(tile_dir, exist_ok=True)
+        #TODO : include correct use of extension parameter
+        if format == "parquet":
+            tiles.to_parquet(os.path.join(tile_dir, f"{yt}.parquet"), engine='pyarrow', compression=parquet_compression, index=False)
+        else:
+            tiles.to_csv(os.path.join(tile_dir, f"{yt}.csv"), sep=output_file_delimiter ,index=False)
+
+    #write info.json
+    data = {
+        "dims": [],
+        "crs": crs,
+        "tileSizeCell": tile_size_cell,
+        "originPoint": {
+            "x": x_origin,
+            "y": y_origin
+        },
+        "resolutionGeo": resolution,
+        "tilingBounds": {
+            "yMin": float(minTY),
+            "yMax": float(maxTY),
+            "xMax": float(maxTX),
+            "xMin": float(minTX)
+        }
+    }
+
+    with open(output_folder + '/info.json', 'w') as json_file:
+        json.dump(data, json_file, indent=3)
 
 
 
