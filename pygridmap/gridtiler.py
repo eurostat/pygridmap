@@ -298,7 +298,7 @@ def csv_to_parquet(folder_path, clean=False, compression='snappy', file_extensio
 
 
 
-def grid_transformation(input_file, function, output_file, input_file_delimiter = ",", output_file_delimiter = ","):
+def grid_transformation(input_file, function, output_file, input_file_delimiter = ",", output_file_delimiter = ",", override=True):
     """transform CSV data.
 
     Args:
@@ -309,14 +309,15 @@ def grid_transformation(input_file, function, output_file, input_file_delimiter 
         output_file_delimiter (str, optional): The CSV delimiter of the output file. Defaults to ",".
     """    
 
+    #clean output file
+    if override and os.path.exists(output_file):
+        os.remove(output_file)
+
     #open file to read
     with open(input_file, 'r') as infile:
-        csvreader = csv.DictReader(infile, delimiter=input_file_delimiter)
-
-        #check output file exists
-        file_exists = os.path.exists(output_file)
         with open(output_file, 'w') as outfile:
-            writer = None
+            csvreader = csv.DictReader(infile, delimiter=input_file_delimiter)
+            csvwriter = None
 
             #iterate through cells from the input CSV file
             for c in csvreader:
@@ -331,13 +332,13 @@ def grid_transformation(input_file, function, output_file, input_file_delimiter 
                 round_floats_to_ints(c)
 
                 #create writer, if necessary, write file header
-                if writer==None:
+                if csvwriter==None:
                     csv_header = get_csv_header(c)
-                    writer = csv.DictWriter(outfile, fieldnames=csv_header, delimiter=output_file_delimiter)
-                    if not file_exists: writer.writeheader()
+                    csvwriter = csv.DictWriter(outfile, fieldnames=csv_header, delimiter=output_file_delimiter)
+                    csvwriter.writeheader()
 
                 #write cell data
-                writer.writerow(c)
+                csvwriter.writerow(c)
 
 
 
@@ -567,4 +568,4 @@ def round_floats_to_ints(cell):
         try:
             f = float(value)
             if f.is_integer(): cell[key] = int(f)
-        except Exception: pass
+        except: pass
