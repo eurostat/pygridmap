@@ -22,6 +22,7 @@ Tile gridded data from raster files for visualisation with GridViz javascript li
 
 #%% Settings     
 
+from multiprocessing import Pool
 import rasterio
 from math import ceil,floor
 import os
@@ -30,6 +31,98 @@ import json
 import pandas as pd
 import concurrent.futures
 from datetime import datetime
+
+
+
+def cartesian_product_comp(minx, miny, maxx, maxy, step=1):
+    pairs = []
+    for x in range(minx, maxx, step):
+        for y in range(miny, maxy, step): pairs.append([x, y])
+    return pairs
+
+
+
+#function to make cell template
+def __build_cell(keys, x, y):
+    c = { "x":x, "y":y }
+    for k in keys: c[k] = None
+    return c
+
+
+
+#function to make a tile
+def __make_tile(xyt, rasters, tile_size_cell, height, keys, output_folder, parquet_compression):
+    [xt, yt] = xyt
+    print(datetime.now(), "tile", xt, yt)
+
+    #prepare tile cells
+    cells_index = {}
+
+    #prepare raster data query window
+    min_col = xt * tile_size_cell
+    #min_row = yt * tile_size_cell
+    min_row = height - (yt+1) * tile_size_cell
+    #col first, then row: window(col, row, w, h)
+    window = rasterio.windows.Window(min_col, min_row, tile_size_cell, tile_size_cell)
+    #print(min_col, min_row)
+
+    #handle every raster
+    for key in keys:
+        #print(key)
+
+        #get raster
+        raster = rasters[key]
+        src = raster["src"]
+
+        #get tile data for key
+        data = src.read(raster["band"], window=window)
+
+        #get dimensions of the data matrix
+        data_height, data_width = data.shape
+        dh = tile_size_cell - data_height
+
+        #make cells
+        for col in range(0, data_width):
+            for row in range(0, data_height):
+
+                #get value
+                value = data[row, col]
+
+                #if no value, skip
+                if value == raster["nodata"] or value in raster["no_data_values"]: continue
+
+                #get cell from index. if it does not exists, create it
+                if col in cells_index: col_ = cells_index[col]
+                else: col_ = {}; cells_index[col] = col_
+                if row in col_: cell = col_[row]
+                else: cell = __build_cell(keys, col, tile_size_cell - row - 1 - dh); col_[row] = cell
+
+                #set cell value
+                cell[key] = value
+
+    #get cells as a list
+    cells = [cell for col in cells_index.values() for cell in col.values()]
+    del cells_index
+
+    print(datetime.now(), "tile", xt, yt, "-", len(cells), "cells")
+
+    #if no cell within tile, skip
+    if len(cells) == 0: return
+
+    #create output folder, if it does not already exists
+    fo = output_folder + "/" + str(xt) + "/"
+    if not os.path.exists(fo): os.makedirs(fo)
+
+    # save
+    df = pd.DataFrame(cells)
+    # define desired column order
+    cols = ['x', 'y'] + [col for col in df.columns if col not in ['x', 'y']]
+    if format == "csv": df.to_csv(fo + str(yt) + ".csv", columns=cols, index=False)
+    elif format == "parquet": df.to_parquet(fo + str(yt) + ".parquet", columns=cols, engine='pyarrow', compression=parquet_compression, index=False)
+    else: raise ValueError("Unexpected format value:"+str(format))
+
+
+
 
 
 def tiling_raster(rasters, output_folder, crs="", tile_size_cell=128, format="csv", parquet_compression="snappy", num_processors_to_use=1):
@@ -76,133 +169,6 @@ def tiling_raster(rasters, output_folder, crs="", tile_size_cell=128, format="cs
     #get keys
     keys = rasters.keys()
 
-    #function to make cell template
-    def build_cell(x, y):
-        c = { "x":x, "y":y }
-        for k in keys: c[k] = None
-        return c
-
-    #function to make a tile
-    def make_tile(xyt):
-        [xt, yt] = xyt
-        print(datetime.now(), "tile", xt, yt)
-
-        #prepare tile cells
-        cells_index = {}
-
-        #prepare raster data query window
-        min_col = xt * tile_size_cell
-        #min_row = yt * tile_size_cell
-        min_row = height - (yt+1) * tile_size_cell
-        #col first, then row: window(col, row, w, h)
-        window = rasterio.windows.Window(min_col, min_row, tile_size_cell, tile_size_cell)
-        #print(min_col, min_row)
-
-        #handle every raster
-        for key in keys:
-            #print(key)
-
-            #get raster
-            raster = rasters[key]
-            src = raster["src"]
-
-            #get tile data for key
-            data = src.read(raster["band"], window=window)
-
-            #get dimensions of the data matrix
-            data_height, data_width = data.shape
-            dh = tile_size_cell - data_height
-
-            #make cells
-            for col in range(0, data_width):
-                for row in range(0, data_height):
-
-                    #get value
-                    value = data[row, col]
-
-                    #if no value, skip
-                    if value == raster["nodata"] or value in raster["no_data_values"]: continue
-
-                    #get cell from index. if it does not exists, create it
-                    if col in cells_index: col_ = cells_index[col]
-                    else: col_ = {}; cells_index[col] = col_
-                    if row in col_: cell = col_[row]
-                    else: cell = build_cell(col, tile_size_cell - row - 1 - dh); col_[row] = cell
-
-                    #set cell value
-                    cell[key] = value
-
-        #get cells as a list
-        cells = [cell for col in cells_index.values() for cell in col.values()]
-        del cells_index
-
-        print(datetime.now(), "tile", xt, yt, "-", len(cells), "cells")
-
-        #if no cell within tile, skip
-        if len(cells) == 0: return
-
-        #create output folder, if it does not already exists
-        fo = output_folder + "/" + str(xt) + "/"
-        if not os.path.exists(fo): os.makedirs(fo)
-
-        # save
-        df = pd.DataFrame(cells)
-        if format == "csv": df.to_csv(fo + str(yt) + ".csv", index=False)
-        elif format == "parquet": df.to_parquet(fo + str(yt) + ".parquet", engine='pyarrow', compression=parquet_compression, index=False)
-
-        '''
-        #remove column with all values null
-        #check columns
-        for key in keys:
-            #check if cells all have key as column
-            toRemove = True
-            for c in cells:
-                if c[key]==None: continue
-                toRemove = False
-                break
-            #remove column
-            if toRemove:
-                for c in cells: del c[key]
-
-        #sort cells
-        cells = sorted(cells, key=lambda d: (d['x'], d['y']))
-
-        #make csv header, ensuring x and y are first columns
-        headers = list(cells[0].keys())
-        headers.remove("x")
-        headers.remove("y")
-        headers.insert(0, "x")
-        headers.insert(1, "y")
-
-        #create output folder, if it does not already exists
-        fo = output_folder + "/" + str(xt) + "/"
-        if not os.path.exists(fo): os.makedirs(fo)
-
-        #save as CSV file
-        cfp = fo + str(yt) + ".csv"
-        with open(cfp, 'w', newline='') as csv_file:
-            #get writer
-            writer = csv.DictWriter(csv_file, fieldnames=headers)
-            #write the header
-            writer.writeheader()
-
-            #write the cell rows
-            for c in cells:
-                writer.writerow(c)
-
-        if format == "csv": return
-
-        #csv to parquet
-
-        #load csv file            
-        df = pd.read_csv(cfp)
-        #save as parquet            
-        df.to_parquet(fo + str(yt) + ".parquet", engine='pyarrow', compression=parquet_compression, index=False)
-        #delete csv file
-        os.remove(cfp)
-        '''
-
-
 
 
 
@@ -237,6 +203,7 @@ def tiling_raster(rasters, output_folder, crs="", tile_size_cell=128, format="cs
     with open(output_folder + '/info.json', 'w') as json_file:
         json.dump(data, json_file, indent=3)
 
+    '''
     #make list of tiles x,y
     pairs = []
     for xt in range(tile_min_x, tile_max_x+1):
@@ -246,9 +213,14 @@ def tiling_raster(rasters, output_folder, crs="", tile_size_cell=128, format="cs
     #make tiles, in parallel
     #TODO use pool instead ?
     with concurrent.futures.ThreadPoolExecutor(max_workers=num_processors_to_use) as executor:
-        { executor.submit(make_tile, tile): tile for tile in pairs }
+        { executor.submit(__make_tile, tile): tile for tile in pairs }
+    '''
 
-
+    # launch parallel computation   
+    processes_params = cartesian_product_comp(tile_min_x, tile_min_y, tile_max_x+1, tile_max_y+1)
+    processes_params = [ ( xy, rasters, tile_size_cell, height, keys, output_folder, parquet_compression )
+        for xy in processes_params ]
+    Pool(num_processors_to_use).starmap(__make_tile, processes_params)
 
 
 
