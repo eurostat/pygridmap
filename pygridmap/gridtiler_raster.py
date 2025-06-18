@@ -141,6 +141,16 @@ def tiling_raster(rasters, output_folder, crs="", tile_size_cell=128, format="cs
         #if no cell within tile, skip
         if len(cells) == 0: return
 
+        #create output folder, if it does not already exists
+        fo = output_folder + "/" + str(xt) + "/"
+        if not os.path.exists(fo): os.makedirs(fo)
+
+        # save
+        df = pd.DataFrame(cells)
+        if format == "csv": df.to_csv(fo + str(yt) + ".csv", index=False)
+        elif format == "parquet": df.to_parquet(fo + str(yt) + ".parquet", engine='pyarrow', compression=parquet_compression, index=False)
+
+        '''
         #remove column with all values null
         #check columns
         for key in keys:
@@ -190,7 +200,7 @@ def tiling_raster(rasters, output_folder, crs="", tile_size_cell=128, format="cs
         df.to_parquet(fo + str(yt) + ".parquet", engine='pyarrow', compression=parquet_compression, index=False)
         #delete csv file
         os.remove(cfp)
-
+        '''
 
 
 
@@ -226,8 +236,6 @@ def tiling_raster(rasters, output_folder, crs="", tile_size_cell=128, format="cs
 
     with open(output_folder + '/info.json', 'w') as json_file:
         json.dump(data, json_file, indent=3)
-
-
 
     #make list of tiles x,y
     pairs = []
@@ -380,6 +388,7 @@ def tiling_raster_generic(rasters, output_folder, resolution_out, x_min, y_min, 
             if toRemove:
                 for c in cells: del c[key]
 
+        #TODO simplify using pandas instead
         #make csv header, ensuring x and y are first columns
         headers = list(cells[0].keys())
         headers.remove("x")
