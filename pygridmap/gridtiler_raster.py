@@ -51,7 +51,7 @@ def __build_cell(keys, x, y):
 
 
 #function to make a tile
-def __make_tile(xyt, rasters, tile_size_cell, output_folder, parquet_compression):
+def __make_tile(xyt, rasters, tile_size_cell, output_folder, format, parquet_compression):
     [xt, yt] = xyt
     print(datetime.now(), "tile", xt, yt)
 
@@ -130,7 +130,7 @@ def __make_tile(xyt, rasters, tile_size_cell, output_folder, parquet_compression
     # define desired column order
     cols = ['x', 'y'] + [col for col in df.columns if col not in ['x', 'y']]
     if format == "csv": df.to_csv(fo + str(yt) + ".csv", columns=cols, index=False)
-    elif format == "parquet": df.to_parquet(fo + str(yt) + ".parquet", columns=cols, engine='pyarrow', compression=parquet_compression, index=False)
+    elif format == "parquet": df.to_parquet(fo + str(yt) + ".parquet", engine='pyarrow', compression=parquet_compression, index=False)
     else: raise ValueError("Unexpected format value:"+str(format))
 
 
@@ -202,7 +202,7 @@ def tiling_raster(rasters, output_folder, crs="", tile_size_cell=128, format="cs
 
     # launch parallel computation   
     processes_params = cartesian_product_comp(tile_min_x, tile_min_y, tile_max_x+1, tile_max_y+1)
-    processes_params = [ ( xy, rasters, tile_size_cell, output_folder, parquet_compression )
+    processes_params = [ ( xy, rasters, tile_size_cell, output_folder, format, parquet_compression )
         for xy in processes_params ]
     Pool(num_processors_to_use).starmap(__make_tile, processes_params)
 
