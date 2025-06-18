@@ -244,6 +244,7 @@ def tiling_raster(rasters, output_folder, crs="", tile_size_cell=128, format="cs
             pairs.append([xt, yt])
 
     #make tiles, in parallel
+    #TODO use pool instead ?
     with concurrent.futures.ThreadPoolExecutor(max_workers=num_processors_to_use) as executor:
         { executor.submit(make_tile, tile): tile for tile in pairs }
 
