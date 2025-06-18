@@ -51,9 +51,18 @@ def __build_cell(keys, x, y):
 
 
 #function to make a tile
-def __make_tile(xyt, rasters, tile_size_cell, height, keys, output_folder, parquet_compression):
+def __make_tile(xyt, rasters, tile_size_cell, output_folder, parquet_compression):
     [xt, yt] = xyt
     print(datetime.now(), "tile", xt, yt)
+
+    # prepare and load raster file data
+    for label in rasters:
+        raster = rasters[label]
+        src = rasterio.open(raster["file"])
+        raster["src"] = src
+        raster["nodata"] = src.meta["nodata"]
+        if not "no_data_values" in raster: raster["no_data_values"] = []
+        height = src.height
 
     #prepare tile cells
     cells_index = {}
@@ -65,6 +74,9 @@ def __make_tile(xyt, rasters, tile_size_cell, height, keys, output_folder, parqu
     #col first, then row: window(col, row, w, h)
     window = rasterio.windows.Window(min_col, min_row, tile_size_cell, tile_size_cell)
     #print(min_col, min_row)
+
+    #get keys
+    keys = rasters.keys()
 
     #handle every raster
     for key in keys:
@@ -146,31 +158,16 @@ def tiling_raster(rasters, output_folder, crs="", tile_size_cell=128, format="cs
     width = None
     height = None
 
-    #prepare and load raster file data
+    # get raster basic data - assuming it is the same for all (!)
     for label in rasters:
         raster = rasters[label]
-        #open file
         src = rasterio.open(raster["file"])
-
-        #get base information on the rasters
         if resolution==None: resolution = src.res[0]
         if bounds==None: bounds = src.bounds
-        if width==None: width = src.width
-        if height==None: height = src.height
-
-        raster["src"] = src
-        raster["nodata"] = src.meta["nodata"]
-        raster["data"] = src.read(raster["band"])
-        if not "no_data_values" in raster: raster["no_data_values"] = []
+        break
 
     #bounds
     x_min, y_min, x_max, y_max = bounds.left, bounds.bottom, bounds.right, bounds.top
-
-    #get keys
-    keys = rasters.keys()
-
-
-
 
     #tile frame caracteristics
     tile_size_geo = resolution * tile_size_cell
@@ -203,22 +200,9 @@ def tiling_raster(rasters, output_folder, crs="", tile_size_cell=128, format="cs
     with open(output_folder + '/info.json', 'w') as json_file:
         json.dump(data, json_file, indent=3)
 
-    '''
-    #make list of tiles x,y
-    pairs = []
-    for xt in range(tile_min_x, tile_max_x+1):
-        for yt in range(tile_min_y, tile_max_y+1):
-            pairs.append([xt, yt])
-
-    #make tiles, in parallel
-    #TODO use pool instead ?
-    with concurrent.futures.ThreadPoolExecutor(max_workers=num_processors_to_use) as executor:
-        { executor.submit(__make_tile, tile): tile for tile in pairs }
-    '''
-
     # launch parallel computation   
     processes_params = cartesian_product_comp(tile_min_x, tile_min_y, tile_max_x+1, tile_max_y+1)
-    processes_params = [ ( xy, rasters, tile_size_cell, height, keys, output_folder, parquet_compression )
+    processes_params = [ ( xy, rasters, tile_size_cell, output_folder, parquet_compression )
         for xy in processes_params ]
     Pool(num_processors_to_use).starmap(__make_tile, processes_params)
 
