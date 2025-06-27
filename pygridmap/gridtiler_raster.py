@@ -51,9 +51,9 @@ def __build_cell(keys, x, y):
 
 
 #function to make a tile
-def __make_tile(xyt, rasters, tile_size_cell, output_folder, format, parquet_compression, modif_fun):
+def __make_tile(xyt, rasters, tile_size_cell, output_folder, format, parquet_compression, modif_fun, verbose):
     [xt, yt] = xyt
-    print(datetime.now(), "tile", xt, yt)
+    if verbose: print(datetime.now(), "tile", xt, yt)
 
     # prepare and load raster file data
     for label in rasters:
@@ -119,7 +119,7 @@ def __make_tile(xyt, rasters, tile_size_cell, output_folder, format, parquet_com
     cells = [cell for col in cells_index.values() for cell in col.values()]
     del cells_index
 
-    print(datetime.now(), "tile", xt, yt, "-", len(cells), "cells")
+    if verbose: print(datetime.now(), "tile", xt, yt, "-", len(cells), "cells")
 
     #if no cell within tile, skip
     if len(cells) == 0: return
@@ -140,7 +140,7 @@ def __make_tile(xyt, rasters, tile_size_cell, output_folder, format, parquet_com
 
 
 
-def tiling_raster(rasters, output_folder, crs="", tile_size_cell=128, format="csv", parquet_compression="snappy", num_processors_to_use=1, modif_fun=None):
+def tiling_raster(rasters, output_folder, crs="", tile_size_cell=128, format="csv", parquet_compression="snappy", num_processors_to_use=1, modif_fun=None, verbose=False):
     """Tile gridded statistics from raster files. Note: all raster files should be based on the same gridded system: same resolution, same size, same origin point.
 
     Args:
@@ -203,7 +203,7 @@ def tiling_raster(rasters, output_folder, crs="", tile_size_cell=128, format="cs
 
     # launch parallel computation   
     processes_params = cartesian_product_comp(tile_min_x, tile_min_y, tile_max_x+1, tile_max_y+1)
-    processes_params = [ ( xy, rasters, tile_size_cell, output_folder, format, parquet_compression, modif_fun )
+    processes_params = [ ( xy, rasters, tile_size_cell, output_folder, format, parquet_compression, modif_fun, verbose )
         for xy in processes_params ]
     Pool(num_processors_to_use).starmap(__make_tile, processes_params)
 
@@ -435,3 +435,4 @@ def tiling_raster_generic(rasters, output_folder, resolution_out, x_min, y_min, 
 
     with open(output_folder + '/info.json', 'w') as json_file:
         json.dump(data, json_file, indent=3)
+

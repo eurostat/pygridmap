@@ -13,7 +13,7 @@ Versioning module of package `pygridmap`.
 # *since*:        June 2020
 
 
-VERSION = (0, 0, 17)
+VERSION = (0, 0, 18)
 """Current version.
 """
 
