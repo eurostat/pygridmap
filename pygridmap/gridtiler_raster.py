@@ -51,7 +51,7 @@ def __build_cell(keys, x, y):
 
 
 #function to make a tile
-def __make_tile(xyt, rasters, tile_size_cell, output_folder, format, parquet_compression):
+def __make_tile(xyt, rasters, tile_size_cell, output_folder, format, parquet_compression, modif_fun):
     [xt, yt] = xyt
     print(datetime.now(), "tile", xt, yt)
 
@@ -109,6 +109,9 @@ def __make_tile(xyt, rasters, tile_size_cell, output_folder, format, parquet_com
                 if row in col_: cell = col_[row]
                 else: cell = __build_cell(keys, col, tile_size_cell - row - 1 - dh); col_[row] = cell
 
+                #
+                if modif_fun: value = modif_fun(value)
+
                 #set cell value
                 cell[key] = value
 
@@ -137,7 +140,7 @@ def __make_tile(xyt, rasters, tile_size_cell, output_folder, format, parquet_com
 
 
 
-def tiling_raster(rasters, output_folder, crs="", tile_size_cell=128, format="csv", parquet_compression="snappy", num_processors_to_use=1):
+def tiling_raster(rasters, output_folder, crs="", tile_size_cell=128, format="csv", parquet_compression="snappy", num_processors_to_use=1, modif_fun=None):
     """Tile gridded statistics from raster files. Note: all raster files should be based on the same gridded system: same resolution, same size, same origin point.
 
     Args:
@@ -155,8 +158,6 @@ def tiling_raster(rasters, output_folder, crs="", tile_size_cell=128, format="cs
     #prepare variable
     resolution = None
     bounds = None
-    width = None
-    height = None
 
     # get raster basic data - assuming it is the same for all (!)
     for label in rasters:
@@ -202,7 +203,7 @@ def tiling_raster(rasters, output_folder, crs="", tile_size_cell=128, format="cs
 
     # launch parallel computation   
     processes_params = cartesian_product_comp(tile_min_x, tile_min_y, tile_max_x+1, tile_max_y+1)
-    processes_params = [ ( xy, rasters, tile_size_cell, output_folder, format, parquet_compression )
+    processes_params = [ ( xy, rasters, tile_size_cell, output_folder, format, parquet_compression, modif_fun )
         for xy in processes_params ]
     Pool(num_processors_to_use).starmap(__make_tile, processes_params)
 
@@ -434,4 +435,3 @@ def tiling_raster_generic(rasters, output_folder, resolution_out, x_min, y_min, 
 
     with open(output_folder + '/info.json', 'w') as json_file:
         json.dump(data, json_file, indent=3)
-
