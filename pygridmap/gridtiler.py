@@ -43,7 +43,8 @@ def grid_tiling(
     output_file_delimiter = ",",
     format = "csv",
     parquet_compression = "snappy",
-    file_extension = None
+    file_extension = None,
+    transform_fun = None,
 ):
     """Tile an input CSV file.
 
@@ -61,6 +62,7 @@ def grid_tiling(
         format (str, optional): The output file encodings format, either "csv" of "parquet". Defaults to "csv".
         parquet_compression (str, optional): The parquet compression. Be aware gridviz-parquet supports only snappy encodings, currently. Defaults to "snappy".
         file_extension (str, optional): The file extension. Defaults to same as format.
+        transform_fun (callable, optional): A function to transform the data before tiling. Defaults to None.
     """
 
     #set file extension if not specified
@@ -88,6 +90,9 @@ def grid_tiling(
 
         #iterate through cells from the input CSV file
         for c in csvreader:
+
+            #apply transformation function, if specified
+            if transform_fun != None: c = transform_fun(c)
 
             c["x"] = float(c["x"])
             c["y"] = float(c["y"])
