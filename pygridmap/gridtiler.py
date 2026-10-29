@@ -84,7 +84,7 @@ def grid_tiling(
         os.makedirs(output_folder)
 
     #open file with data to tile
-    with open(input_file, 'r') as csvfile:
+    with open(input_file, 'r', encoding='utf-8-sig') as csvfile:
         csvreader = csv.DictReader(csvfile, delimiter=input_file_delimiter)
         csv_header = None
 
@@ -319,7 +319,7 @@ def grid_transformation(input_file, function, output_file, input_file_delimiter 
         os.remove(output_file)
 
     #open file to read
-    with open(input_file, 'r') as infile:
+    with open(input_file, 'r', encoding='utf-8-sig') as infile:
         with open(output_file, 'w') as outfile:
             csvreader = csv.DictReader(infile, delimiter=input_file_delimiter)
             csvwriter = None
@@ -383,7 +383,7 @@ def grid_aggregation(
     keys = None
 
     print("aggregation indexing...")
-    with open(input_file, 'r') as infile:
+    with open(input_file, 'r', encoding='utf-8-sig') as infile:
         csvreader = csv.DictReader(infile, delimiter=input_file_delimiter)
 
         #iterate through cells from the input CSV file
