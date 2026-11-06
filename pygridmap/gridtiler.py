@@ -320,7 +320,7 @@ def grid_transformation(input_file, function, output_file, input_file_delimiter 
 
     #open file to read
     with open(input_file, 'r', encoding='utf-8-sig') as infile:
-        with open(output_file, 'w') as outfile:
+        with open(output_file, 'w', newline='') as outfile:
             csvreader = csv.DictReader(infile, delimiter=input_file_delimiter)
             csvwriter = None
 
@@ -364,7 +364,7 @@ def grid_aggregation(
     input_file_delimiter = ",",
     output_file_delimiter = ","
 ):
-    """Aggregate grid data to a lower resolution. NB: in this version, the aggregated values are the sum of the value - other functions to be available soon.
+    """Aggregate grid data to a lower resolution. By default, the aggregated values are the sum of the values. Use aggregation_fun for other methods.
 
     Args:
         input_file (str): The path to the input grid as CSV file. One row per grid cell. This CSV file should include a x and y columns containing the coordinates of the lower left corner of the cell. If this is not the case, use grid_transform function for example.
@@ -416,7 +416,7 @@ def grid_aggregation(
     round_to_tolerance = lambda number : round(number * tolerance) / tolerance
 
     writer = None
-    with open(output_file, 'w') as outfile:
+    with open(output_file, 'w', newline='') as outfile:
 
         #aggregate cell values
         for xa, d in aggregation_index.items():
@@ -475,7 +475,7 @@ def aggregation_sum(values, _=0):
 
 
 def aggregation_average(values, _):
-    """average: the sum of values, divided by the number of values
+    """average: the sum of values, divided by the number of values. Empty values count as 0: use aggregation_average_3 to ignore them.
 
     Args:
         values (float): The values to aggregate
@@ -532,6 +532,84 @@ def aggregation_single_value(values, _):
         float: The aggregated value
     """
     return values[0]
+
+
+def _numbers(values):
+    """The values as numbers, without the empty ones.
+
+    Args:
+        values (str): The values
+
+    Returns:
+        list(float): The numbers
+    """
+    return [float(v) for v in values if v != "" and v != None]
+
+
+def aggregation_median(values, _=0):
+    """median, ignoring the empty values.
+
+    Args:
+        values (float): The values to aggregate
+        _ (int): unused
+
+    Returns:
+        float: The aggregated value, or None if all values are empty
+    """
+    numbers_ = sorted(_numbers(values))
+    if len(numbers_) == 0: return None
+    m = len(numbers_) // 2
+    return numbers_[m] if len(numbers_) % 2 == 1 else (numbers_[m-1] + numbers_[m]) / 2
+
+
+def aggregation_min(values, _=0):
+    """minimum, ignoring the empty values.
+
+    Args:
+        values (float): The values to aggregate
+        _ (int): unused
+
+    Returns:
+        float: The aggregated value, or None if all values are empty
+    """
+    return min(_numbers(values), default=None)
+
+
+def aggregation_max(values, _=0):
+    """maximum, ignoring the empty values.
+
+    Args:
+        values (float): The values to aggregate
+        _ (int): unused
+
+    Returns:
+        float: The aggregated value, or None if all values are empty
+    """
+    return max(_numbers(values), default=None)
+
+
+def aggregation_mode(values, _=0):
+    """mode: the most frequent value, ignoring the empty values. In case of a tie, the first one found among the most frequent ones. It supports non-numerical values.
+
+    Args:
+        values (str): The values to aggregate
+        _ (int): unused
+
+    Returns:
+        str: The aggregated value, or None if all values are empty
+    """
+    counts = {}
+    for v in values:
+        if v == "" or v == None: continue
+        counts[v] = counts.get(v, 0) + 1
+    #a dictionnary is iterated in the order the values were first found
+    best = None
+    best_count = 0
+    for v, count in counts.items():
+        if count > best_count:
+            best = v
+            best_count = count
+    return best
 
 
 
