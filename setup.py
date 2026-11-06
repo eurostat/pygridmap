@@ -43,7 +43,7 @@ REQUIRES_PYTHON = '>=3.6.0'
 
 # packages required for this module to be executed
 REQUIRED = [
-    'numpy', 'pandas', # 'pygeos',
+    'numpy', 'pandas', 'pyarrow', # 'pygeos',
     'shapely', 'fiona', 'pyproj', 'geopandas'
 ]
 # in Python standard library (see https://docs.python.org/3/library/):

@@ -360,7 +360,7 @@ def tiling_raster_generic(rasters, output_folder, resolution_out, x_min, y_min, 
 
         #save as CSV file
         cfp = fo + str(yt) + ".csv"
-        with open(cfp, 'w', newline='') as csv_file:
+        with open(cfp, 'w', newline='', encoding='utf-8') as csv_file:
             #get writer
             writer = csv.DictWriter(csv_file, fieldnames=headers)
             #write the header
