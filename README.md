@@ -123,7 +123,7 @@ With respect to the latter implementation, the current algorithm supports a tile
 Raster tiling with `gridtiler_raster` also requires [`rasterio`](https://rasterio.readthedocs.io), which can be installed with `pip install rasterio`.
 
 * Data handling: [`numpy`](https://numpy.org/), [`pandas`](http://pandas.pydata.org) and [`pyarrow`](https://arrow.apache.org/docs/python/) (for the parquet format).
-* Geospatial data processing: [`geopandas`](http://geopandas.org), [`fiona`](https://fiona.readthedocs.io/en/latest/manual.html), [shapely](https://pypi.org/project/Shapely/), [`RTree`](https://toblerity.org/rtree/), [`geopy`](https://github.com/geopy/geopy) and [`pyproj`](https://github.com/pyproj4/pyproj).
+* Geospatial data processing: [`geopandas`](http://geopandas.org), [shapely](https://pypi.org/project/Shapely/), [`RTree`](https://toblerity.org/rtree/), [`geopy`](https://github.com/geopy/geopy) and [`pyproj`](https://github.com/pyproj4/pyproj).
 * Map visualisations: [`ipyleaflet`](https://github.com/jupyter-widgets/ipyleaflet) or [`folium`](https://github.com/python-visualization/folium).
 * Areal interpolation (alternative implementation), as well as dasymetric mapping, and change of support: [`tobler`](https://github.com/pysal/tobler), in particular module [`area_weighted`](https://github.com/pysal/tobler/tree/master/tobler/area_weighted).
 
