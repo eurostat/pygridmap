@@ -52,6 +52,7 @@ REQUIRED = [
 
 # optional packages: see https://geopandas.org/install.html
 EXTRAS = {
+    'rasterio': 'rasterio', # for gridtiler_raster
     'geopy': 'geopy', 
     'rtree': 'rtree',
     'psycopg2': 'psycopg2',

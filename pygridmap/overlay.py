@@ -48,7 +48,7 @@ try:
 except: 
     pass
 
-from pygridmap.base import FrameProcessor, GridProcessor#analysis:ignore
+from pygridmap.base import FrameProcessor, GridProcessor, union_all#analysis:ignore
 from pygridmap.base import NPROCESSES, NCPUS
 from pygridmap.gridding import GridMaker
 
@@ -180,7 +180,7 @@ class GridOverlay(GridProcessor):
             return tile
         # note on the use of spatial indexing in sjoin: "if both dataframes have a spatial index, 
         # the right_df’s index will be used preferentially"
-        poly = gpd.sjoin(tile, polyarea, op = 'intersects', how = 'left')
+        poly = gpd.sjoin(tile, polyarea, predicate = 'intersects', how = 'left')
         return poly.drop(columns=list(set(tile.columns).difference(set(poly.columns))), errors = 'ignore')
     
     #/************************************************************************/
@@ -191,43 +191,22 @@ class GridOverlay(GridProcessor):
         buff_geom_prec = buff_geom_prec or GridProcessor.TOL_EPS # or 0?
         keep_index = cls.COL_GRIDX if keep_index is True else keep_index
         # create a single tile object for clipping
-        if tilesize is True: 
+        if tilesize is True:
             tilesize = cls.COL_TILE
         if isinstance(tilesize,str):
-            if tilesize not in grid.columns:
+            if tilesize not in poly.columns:
                 raise IOError('tile column name not found')
-            index = poly[poly[tilesize] == iy].index
+            index = np.flatnonzero(poly[tilesize] == iy)
         else:
             xmin, ymin, xmax, ymax = cls.get_tile_bbox(idx, cellsize, tilesize, gridbbox, False) # no crop
-            # tilebbox = cls.bbox_to_polygon (xmin, ymin, xmax, ymax)
-            # retrieve the indexes of the grid cells within the considered tile
-            if cellsize is None:
-                index = list(poly.sindex.intersection([xmin, ymin, xmax, ymax]))
-            elif cls.COL_X in poly.columns and cls.COL_Y in poly.columns: # poly is a grid
-                index = poly[(poly[cls.COL_X] >= xmin) & (poly[cls.COL_X]  <= xmax) \
-                            & (poly[cls.COL_Y] >= ymin)  & (poly[cls.COL_Y] <= ymax)].index
-            elif sort not in (False, None):
-                nygrid, nxgrid = tilesize
-                nrows, ncols = cls.get_grid_shape(cellsize, gridbbox)
-                index = [(iy*nygrid + j)*ncols + (ix*nxgrid + i) if sort == 'rc'    \
-                         else (iy*nygrid + j) + (ix*nxgrid + i)*nrows               \
-                          for j in range(nygrid) for i in range(nxgrid)]
-                # index = [(ix*nxgrid + i)*nrows + (iy*nygrid + j) for j in range(nygrid) for i in range(nxgrid)]
-                index = [ind for ind in index if ind<=nrows*ncols - 1]
-            elif True:
-                bbox = (cls.bbox_to_polygon(xmin, ymin, xmax, ymax)
-                        .buffer(-min(cellsize) * buff_geom_prec)
-                        .bounds)
-                index = list(poly.sindex.intersection(bbox))
-            else: # forget about this one
-                geometry = (cls.bbox_to_polygon(xmin, ymin, xmax, ymax)
-                            .buffer(buff_geom_prec)
-                            .geometry)
-                clip_bbox = gpd.GeoDataFrame(geometry = [geometry], crs = grid.crs)
-                # buffer to solve inconsistent geometries
-                return gpd.clip(poly, clip_bbox, keep_geom_type = True)
-        if index is None or index is []:
-            return tilebbox if preserve_tile is True else None
+            # retrieve the positions of the geometries within the considered tile: each geometry is assigned
+            # to one tile only, the one of its centroid. Otherwise, the geometries on the border between two
+            # tiles would be processed twice and appear twice in the output.
+            centroid = poly.centroid
+            index = np.flatnonzero((centroid.x >= xmin) & (centroid.x < xmax) \
+                                   & (centroid.y >= ymin) & (centroid.y < ymax))
+        if len(index) == 0:
+            return None
         if keep_index in (None, False):
             return (poly
                     .iloc[index]
@@ -235,11 +214,11 @@ class GridOverlay(GridProcessor):
                    )
         else:
             return (poly
-                    .iloc[index] 
+                    .iloc[index]
                     .reset_index() # index reset at the level of the processing tile
                     .rename(columns={'index': keep_index})
                     )
-    
+
     #/************************************************************************/
     @classmethod
     def clip_polygon(cls, poly1, poly2, keep_geom_type = True, 
@@ -249,7 +228,7 @@ class GridOverlay(GridProcessor):
         # Perform set/geometric intersection/union operations (how_overlay) of 2 polygon layers poly1 and poly2
         # 1. build the dissolved version of the poly1 (e.g. "merge" the geometries)
         # poly1.reset_index(inplace=True)
-        union1 = poly1.geometry.unary_union # it is a tile in the case a poly1 is a grid
+        union1 = union_all(poly1.geometry) # it is a tile in the case a poly1 is a grid
         # or (faster?):
         # union1 = GeoProcesor.bbox_to_geoframe(*poly1.total_bounds, crs = poly1.crs)
         # 2. create a bounding box for the initial intersection
@@ -337,7 +316,11 @@ class GridOverlay(GridProcessor):
     #/************************************************************************/
     @classmethod
     def attribute_overlay(cls, polyarea1, overlay2, rule, columns):  
-        if rule in ['min', 'max']:
+        if rule == 'list': # the list of the values of the polygons overlapping each grid cell
+            overlay2 = overlay2.drop(columns = columns).merge(
+                overlay2.groupby(cls.COL_GRIDX)[columns].agg(list).reset_index(), on = cls.COL_GRIDX
+            )
+        elif rule in ['min', 'max']:
             overlay2 = (overlay2
                         .sort_values(cls.COL_PCT, ascending = True if rule == 'min' else False)
                       )
@@ -366,11 +349,13 @@ class GridOverlay(GridProcessor):
         #            )
         #    overlay2 = overlay2.iloc[index]
         # update the resulting selected geometries
+        # the columns of polyarea1 are not taken from overlay2, as they would be renamed by the merge
+        common = set(polyarea1.columns).intersection(overlay2.columns).difference({cls.COL_GRIDX})
         return (polyarea1
                 .merge(overlay2
-                       .drop(columns = [cls.COL_PCT, cls.COL_AREA, 'geometry'], errors = 'ignore'), 
+                       .drop(columns = list(common.union({cls.COL_PCT, cls.COL_AREA, 'geometry'})), errors = 'ignore'),
                        on = cls.COL_GRIDX
-                      ) 
+                      )
                )
 
     #/************************************************************************/
@@ -383,7 +368,7 @@ class GridOverlay(GridProcessor):
         # define the subgrid over the specific tile considered for processing
         if columns not in (None,[]): 
             # and (intercols:=set(columns).intersection(set(subgrid.columns))) != set()):
-            subgrid.drop(columns = columns, inplace = True, errors = 'ignore')
+            subgrid = subgrid.drop(columns = columns, errors = 'ignore')
         # define the geometric overlay (e.g., how_overlay=intersection or union) of both the subgrid 
         # and the polygon representation
         clippoly = cls.clip_polygon(subgrid, polygons, 
@@ -403,8 +388,8 @@ class GridOverlay(GridProcessor):
             overlay = cls.cover_overlay(overlay, pct_thres = None)
         if rule is None or columns in (None,[]):
             return overlay
-        overlay.drop(columns = [cls.COL_INTERSECTS, cls.COL_WITHIN, cls.COL_TILE, cls.COL_X, cls.COL_Y], 
-                     inplace = True, errors = 'ignore')
+        overlay = overlay.drop(columns = [cls.COL_INTERSECTS, cls.COL_WITHIN, cls.COL_TILE, cls.COL_X, cls.COL_Y],
+                               errors = 'ignore')
         overlay = cls.attribute_overlay(subgrid, 
                                         overlay, 
                                         rule,
@@ -440,6 +425,10 @@ class GridOverlay(GridProcessor):
         try:
             assert isinstance(grid, (gpd.GeoSeries, gpd.GeoDataFrame))
         except: raise TypeError("Wrong format for grid data")
+        if isinstance(polygons, gpd.GeoSeries):
+            polygons = gpd.GeoDataFrame(geometry = polygons)
+        if isinstance(grid, gpd.GeoSeries):
+            grid = gpd.GeoDataFrame(geometry = grid)
         # check area flag
         try:
             assert isinstance(area, bool)
@@ -497,21 +486,13 @@ class GridOverlay(GridProcessor):
             nytiles, nxtiles = tileshape
             iytiles, ixtiles = list(range(nytiles)), list(range(nxtiles))
         # verify processing mode
-        if nytiles * nxtiles > 1 and self.mode != 'seq' and self.cores > 1:
-            # warnings.warn('No parallel processing available for unique tile')
-            cores, processor = 1, self.process_tile
-        else:
-            cores, processor = self.cores, self.processor        
-        # start processing        
-        pool = mp.Pool(processes = cores)
-        if cover is True:
-            # polygons = (polygons.reset_index()
-            #             .set_index('index', drop = False)
-            #             .rename(columns={'index': self.COL_POLIDX})
-            #            ) 
-            polygons[self.COL_POLIDX] = polygons.index.copy()
+        cores = 1 if self.mode == 'seq' or nytiles * nxtiles == 1 else self.cores
         memory_split = False if nytiles * nxtiles == 1 else self.memory_split
-        olay_tile = []
+        processor = self.process_split_tile if memory_split is True else self.process_tile
+        # start processing
+        if cover is True:
+            polygons = polygons.assign(**{self.COL_POLIDX: polygons.index}) # the input data remain unchanged
+        tasks = []
         for ix in ixtiles:
             for iy in iytiles:
                 if memory_split is True:
@@ -523,21 +504,19 @@ class GridOverlay(GridProcessor):
                                                 sort = self.sorted) 
                     if subgrid is None or subgrid.is_empty.all():
                         continue        
-                olay_tile.append(pool.apply_async(self.processor,
-                                                 args = ([iy, ix, nytiles, nxtiles], 
-                                                         gridbbox, cellsize, tilesize, 
-                                                         polygons, subgrid if memory_split is True else grid, 
-                                                         area, cover, rule, columns, self.how, 
-                                                         self.buff_geom_prec,
-                                                         self.keep_geom_type, self.preserve_polygon, 
-                                                         self.sorted
-                                                        ))  
-                                )
-        pool.close()
-        pool.join()
-        olay = pd.concat([t.get() for t in olay_tile if t is not None], 
-                         axis = 0, ignore_index = True)
-        if drop != False: 
+                tasks.append(([iy, ix, nytiles, nxtiles],
+                              gridbbox, cellsize, tilesize,
+                              polygons, subgrid if memory_split is True else grid,
+                              area, cover, rule, columns, self.how,
+                              self.buff_geom_prec,
+                              self.keep_geom_type, self.preserve_polygon,
+                              self.sorted
+                             ))
+        olay_tile = [t for t in self.run_tasks(processor, tasks, cores) if t is not None]
+        if olay_tile == []: # nothing overlaps
+            return gpd.GeoDataFrame(columns = ['geometry'], geometry = 'geometry', crs = grid.crs)
+        olay = pd.concat(olay_tile, axis = 0, ignore_index = True)
+        if drop != False:  
             if drop is True:
                 drop = [self.COL_TILE, self.COL_INTERSECTS, self.COL_WITHIN, self.COL_POLIDX] #__drops
                 drop.extend(polygons.columns.tolist())
@@ -548,7 +527,7 @@ class GridOverlay(GridProcessor):
             if rule is not None: # we keep still keep those, otherwise there was no point!
                 drop = set(drop).difference(set(columns))
             drop = set(drop).difference({self.COL_GRIDX, 'geometry'}) # don't drop those two!!!
-            olay.drop(columns = list(drop), axis = 1, inplace = True, errors = 'ignore')
+            olay = olay.drop(columns = list(drop), errors = 'ignore')
         return gpd.GeoDataFrame(olay, crs = grid.crs)
 
 
@@ -594,15 +573,9 @@ def area_interpolate(source, target, extensive_variables,
     area, cover, drop = True, True, True
     
     proc = GridOverlay(mode = mode, how = 'intersection', cell = cell, cores = cores, tile = tile)
-    try:
-        assert memory_split is None
-        proc.memory_split = False
-        return proc(source, target, rule = rule, columns = extensive_variables, 
-                    area = area, cover = cover, drop = drop)
-    except: # at this stage: either memory_split was None and the proc crashed, or it was not None
-        proc.memory_split = memory_split or True # if it is None, then try with True this time
-        return proc(source, target, rule = rule, columns = extensive_variables, 
-                    area = area, cover = cover, drop = drop)
+    proc.memory_split = bool(memory_split)
+    return proc(source, target, rule = rule, columns = extensive_variables,
+                area = area, cover = cover, drop = drop)
     
 
 #%% Main for binary usage

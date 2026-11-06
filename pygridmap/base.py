@@ -62,6 +62,12 @@ else:
 
 #%% Core functions/classes
 
+def union_all(geom):
+    # The union of all geometries of a GeoSeries or a GeoDataFrame: unary_union is deprecated
+    # since geopandas 1.0, which introduced union_all
+    return geom.union_all() if hasattr(geom, 'union_all') else geom.unary_union
+
+
 #==============================================================================
 # Class FrameProcessor
 #==============================================================================
@@ -74,12 +80,10 @@ class FrameProcessor():
         
     #/************************************************************************/
     def __call__(self, df, func):
+        # numpy.array_split does not support data frames anymore: split the positions of the rows
+        parts = [df.iloc[pos] for pos in np.array_split(np.arange(len(df)), self.cores) if len(pos) > 0]
         pool = mp.Pool(processes=self.cores)
-        df = pd.concat(
-            pool.map(func, 
-                     np.array_split(df, self.cores)
-                    )
-            )
+        df = pd.concat(pool.map(func, parts))
         pool.close()
         pool.join()
         return df
@@ -103,7 +107,7 @@ class GridProcessor():
         
     MODES = ['prll', 'seq']
     SORTS = ['rc', 'cr']
-    XYPOS = ['LLc', 'LRc',' URc', 'ULc', 'CC', 'centre']
+    XYPOS = ['LLc', 'LRc', 'URc', 'ULc', 'CC', 'centre']
 
     TOL_EPS = 1e-5 # 1e-14 
     
@@ -203,6 +207,19 @@ class GridProcessor():
 
     #/************************************************************************/
     @staticmethod
+    def run_tasks(func, tasks, cores):
+        # Run a function on the arguments of several tasks, in parallel if necessary and return
+        # the list of results: an exception raised by a task is raised here.
+        if cores <= 1 or len(tasks) <= 1:
+            return [func(*args) for args in tasks]
+        pool = mp.Pool(processes = min(cores, len(tasks)))
+        results = [pool.apply_async(func, args = args) for args in tasks]
+        pool.close()
+        pool.join()
+        return [result.get() for result in results]
+
+    #/************************************************************************/
+    @staticmethod
     def check_ref_proj(gdf1, gdf2):
         try:
             assert (isinstance(gdf1, (gpd.GeoDataFrame, gpd.GeoSeries)) \
@@ -224,14 +241,10 @@ class GridProcessor():
     def get_bbox(gdf1, gdf2, bbox = True):
         if bbox is True:
             return gdf1.total_bounds.tolist()
-        #return ((gdf2 if GridProcessor.check_ref_proj(gdf1, polygons) is True else gdf2.to_crs(gdf1.crs))
-        #        .unary_union
-        #        .union(gdf1.unary_union)
-        #        .envelope.bounds)
-        elif GridProcessor.check_ref_proj(gdf1, polygons) is True:
-            return gdf2.unary_union.union(gdf1.unary_union).envelope.bounds 
+        elif GridProcessor.check_ref_proj(gdf1, gdf2) is True:
+            return union_all(gdf2).union(union_all(gdf1)).envelope.bounds
         else:
-            return gdf2.to_crs(gdf1.crs).unary_union.union(gdf1.unary_union).envelope.bounds
+            return union_all(gdf2.to_crs(gdf1.crs)).union(union_all(gdf1)).envelope.bounds
     
     #/************************************************************************/
     @staticmethod
@@ -376,12 +389,12 @@ class GridProcessor():
         height, width = cellsize
         # if xypos == 'LLc':   pass # i.e.: do nothing
         if xypos in ['LRc','URc']:
-            idcols = map(lambda x: x-width, idcols)
+            idcols = [x-width for x in idcols]
         if xypos in ['ULc','URc']:
-            idrows = map(lambda y: y-height, idrows)
+            idrows = [y-height for y in idrows]
         if xypos in ['CC','centre']:
-            idcols = map(lambda x: x-width/2, idcols)
-            idrows = map(lambda y: y-height/2, idrows)
+            idcols = [x-width/2 for x in idcols]
+            idrows = [y-height/2 for y in idrows]
         polygrid = []
         [polygrid.append(cls.bbox_to_polygon(x, y, x + width, y + height)) 
          for x in idcols for y in idrows] # note the order: cols then rows
@@ -430,7 +443,7 @@ class GridProcessor():
     
     #/************************************************************************/
     @classmethod
-    def intersection(cls, *arg, **kwargs):
+    def intersection(cls, geom, *args, **kwargs):
         # Return the intersection of an input geometry with an arbitrary number of 
         # other geometries. The type of the returned object depends on the type of  
         # the input geomety (bounding box or polygon)
@@ -444,36 +457,19 @@ class GridProcessor():
             return [max(bbox[0], other[0]), max(bbox[1], other[1]),
                     min(bbox[2], other[2]), min(bbox[3], other[3])]
         def _intersection_polygon(polygon, other):
-            if rtree is True:
-                if isinstance(other, (gpd.GeoDataFrame,gpd.GeoSeries)):
-                    sindex = other.sindex
-                elif isinstance(other, (geometry.Polygon,geometry.MultiPolygon)):
-                    sindex = strtree.STRtree(other)
-                else:
-                    sindex = None
             if isinstance(other, (tuple,list)):
                 other = cls.bbox_to_polygon(*other) # cls.bbox_to_geoframe(*other, crs=crs)
             elif isinstance(other, (gpd.GeoDataFrame,gpd.GeoSeries)):
-                other = other.geometry
-            #elif isinstance(other, (geometry.Polygon,geometry.MultiPolygon)):
-            #    other = gpd.GeoDataFrame(index=[0], geometry=[geom])
-            #    if crs is not None:
-            #        other.crs = crs
-            if rtree is True and sindex is not None:
-                try:
-                    sidx = list(sindex.intersection(other))
-                except:
-                    sidx = sindex.query(other)
-                if sidx == []:
-                    return None
-                try:
-                    polygon = polygon.iloc[sidx].copy()
-                except: 
-                    polygon = polygon[sidx]
-            if True:
+                other = union_all(other)
+            if isinstance(polygon, (gpd.GeoDataFrame,gpd.GeoSeries)):
+                if rtree is True:
+                    # filter the geometries that may intersect with the spatial index
+                    sidx = polygon.sindex.query(other)
+                    if len(sidx) == 0:
+                        return None
+                    polygon = polygon.iloc[sidx]
                 return polygon.intersection(other)
-            else:
-                return gpd.overlay(polygon, other, how='intersection')
+            return polygon.intersection(other)
         if geom is None and len(args)>=1: # support iterative use
             geom, args = args[0], args[1:]
         if len(args)==0:
@@ -505,20 +501,19 @@ class GridProcessor():
             if isinstance(other, (tuple,list)):
                 other = cls.bbox_to_polygon(*other) # cls.bbox_to_geoframe(*other, crs=crs)
             elif isinstance(other, (gpd.GeoDataFrame,gpd.GeoSeries)):
-                other = other.unary_union
+                other = union_all(other)
             #elif isinstance(other, (geometry.Polygon,geometry.MultiPolygon)):
             #    other = gpd.GeoDataFrame(index=[0], geometry=[geom])
             #    if crs is not None:
             #        other.crs = crs
-            if True:
-                return polygon.union(other)
-            else:
-                return gpd.overlay(polygon, other, how='union')
+            if isinstance(polygon, (gpd.GeoDataFrame,gpd.GeoSeries)):
+                polygon = union_all(polygon)
+            return polygon.union(other)
         if geom is None and len(args)>=1: # support iterative use
             geom, args = args[0], args[1:]
         if len(args)==0:
             if isinstance(geom, (gpd.GeoDataFrame,gpd.GeoSeries)):
-                return geom.unary_union
+                return union_all(geom)
             elif isinstance(geom, (geometry.Polygon,geometry.MultiPolygon)):
                 return ops.unary_union(geom)
             else:

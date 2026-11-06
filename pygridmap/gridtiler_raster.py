@@ -23,7 +23,10 @@ Tile gridded data from raster files for visualisation with GridViz javascript li
 #%% Settings     
 
 from multiprocessing import Pool
-import rasterio
+try:
+    import rasterio
+except ImportError:
+    raise ImportError("rasterio is required for raster tiling: install it with: pip install pygridmap[rasterio]")
 from math import ceil,floor
 import os
 import csv
