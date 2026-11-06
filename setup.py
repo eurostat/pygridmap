@@ -39,7 +39,7 @@ VERSION             = None
 EMAIL               = 'jacopo.grazzini@ec.europa.eu'
 AUTHOR              = 'Jacopo Grazzini'
 
-REQUIRES_PYTHON = '>=3.6.0'
+REQUIRES_PYTHON = '>=3.11'
 
 # packages required for this module to be executed
 REQUIRED = [
@@ -159,7 +159,10 @@ setup(
                                         # Trove classifiers
                                         'Programming Language :: Python',
                                         'Programming Language :: Python :: 3',
-                                        'Programming Language :: Python :: 3.6',
+                                        'Programming Language :: Python :: 3.11',
+                                        'Programming Language :: Python :: 3.12',
+                                        'Programming Language :: Python :: 3.13',
+                                        'Programming Language :: Python :: 3.14',
                                         'Topic :: Database'
                                         # full list: https://pypi.python.org/pypi?%3Aaction=list_classifiers
                                         ],

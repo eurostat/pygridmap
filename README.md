@@ -43,11 +43,7 @@ The package `pygridmap` supports the following methods/algorithms:
 
 **Quick install**
 
-The `pygridmap` package can be installed using `pip`:
-```python
->>> pip install pygridmap
-```
-If you wish to use the latest available version from _github_:
+The `pygridmap` package is not published on PyPI. It can be installed from _github_ using `pip`, with Python 3.11 or later:
 ```python
 >>> pip install git+https://github.com/eurostat/pygridmap.git
 ```
@@ -124,7 +120,7 @@ With respect to the latter implementation, the current algorithm supports a tile
 
 **<a name="Requirements"></a>Requirements**
 
-Raster tiling with `gridtiler_raster` also requires [`rasterio`](https://rasterio.readthedocs.io), which can be installed with `pip install pygridmap[rasterio]`.
+Raster tiling with `gridtiler_raster` also requires [`rasterio`](https://rasterio.readthedocs.io), which can be installed with `pip install rasterio`.
 
 * Data handling: [`numpy`](https://numpy.org/), [`pandas`](http://pandas.pydata.org) and [`pyarrow`](https://arrow.apache.org/docs/python/) (for the parquet format).
 * Geospatial data processing: [`geopandas`](http://geopandas.org), [`fiona`](https://fiona.readthedocs.io/en/latest/manual.html), [shapely](https://pypi.org/project/Shapely/), [`RTree`](https://toblerity.org/rtree/), [`geopy`](https://github.com/geopy/geopy) and [`pyproj`](https://github.com/pyproj4/pyproj).

@@ -26,7 +26,7 @@ from multiprocessing import Pool
 try:
     import rasterio
 except ImportError:
-    raise ImportError("rasterio is required for raster tiling: install it with: pip install pygridmap[rasterio]")
+    raise ImportError("rasterio is required for raster tiling: install it with: pip install rasterio")
 from math import ceil,floor
 import os
 import csv
