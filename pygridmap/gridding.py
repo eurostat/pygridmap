@@ -23,7 +23,6 @@ Grid making operations.
 
 #%% Settings     
 
-from six import integer_types, string_types
 
 import math
 import numpy as np
@@ -77,7 +76,7 @@ class GridMaker(GridProcessor):
         self.buffer = kwargs.pop('buffer', None)
         self.sorted = kwargs.pop('sorted', False)
         self.asc = kwargs.pop('asc', True)
-        self.xypos = kwargs.pop('xypos ', None)
+        self.xypos = kwargs.pop('xypos', None)
     
     #/************************************************************************/
     @property
@@ -129,6 +128,27 @@ class GridMaker(GridProcessor):
         self.__asc = asc
      
     #/************************************************************************/
+    @staticmethod
+    def test_mask(polygon, mask):
+        # Test a polygon against a mask: return the "intersects" indicator (None if there is no mask to
+        # test against) and the "within" indicator (1 if the polygon is within one of the geometries).
+        if isinstance(mask, bool):
+            return (1 if mask is True else None), 0
+        if mask is None:
+            return None, 0
+        # the polygon is compared to all geometries of the mask, and not only to the first one
+        wans = int(mask.geometry.contains(polygon).any())
+        ians = 1 if wans == 1 else int(mask.geometry.intersects(polygon).any())
+        return ians, wans
+
+    #/************************************************************************/
+    @staticmethod
+    def get_tile_index(iy, ix, nytiles, nxtiles, sort):
+        if sort is False or sort.startswith('tile') or sort.endswith('rc'):
+            return ix + iy*nxtiles
+        return ix*nytiles + iy
+
+    #/************************************************************************/
     @classmethod
     def prll_process_tile(cls, idx, gridbbox, cellsize, tilesize, xypos,
                           mask, crs, interior, sort, trim, crop, buffer):
@@ -142,13 +162,7 @@ class GridMaker(GridProcessor):
         if buffer is not None:
             tile = tile.buffer(0)
         # test the overall tile
-        ians, wans = None, 0
-        if isinstance(mask, bool):
-            if mask is True: ians = 1
-        elif not mask is None:
-            # s = list(mask.sindex.intersection(tilebounds))
-            wans = tile.within(mask).tolist()[0] and 1 # note that wans = 1 => ians = 1
-            ians = 1 if wans in (True,1) else tile.intersects(mask).tolist()[0]
+        ians, wans = cls.test_mask(tile.geometry.iloc[0], mask)
         if ians in (True, 1):
             rows, cols = cls.get_pos_location(cellsize, tilebbox, xypos = xypos)
             tile = gpd.GeoDataFrame({'geometry': cls.build_from_pos(cellsize, rows, cols, xypos = xypos),
@@ -162,9 +176,7 @@ class GridMaker(GridProcessor):
             tile[cls.COL_X], tile[cls.COL_Y] = tilebbox[:2] 
         # for all tiles indifferently: set the intersects/within "indicators" and the tile index
         tile[cls.COL_INTERSECTS], tile[cls.COL_WITHIN] = ians or 0, wans or 0#np.nan
-        tile[cls.COL_TILE] = ix + iy*nxtiles                                          \
-            if (sort is False or sort.startswith('tile') or sort.endswith == 'rc')  \
-            else ix*nytiles + iy      
+        tile[cls.COL_TILE] = cls.get_tile_index(iy, ix, nytiles, nxtiles, sort)
         if trim is False or wans in (True,1):
             return tile
         # from now on, trim is necessarily True
@@ -194,66 +206,62 @@ class GridMaker(GridProcessor):
         iy, ix = idx[:2]
         if len(idx)>2: nytiles, nxtiles = idx[2:]
         height, width = cellsize
-        # define the bounds of the tile: retrieve the grid cells within the considered tile
-        tilebox = cls.get_tile_bbox(idx, cellsize, tilesize, gridbbox, crop)
+        # define the bounds of the tile: it is not cropped here, because its size in number of cells has
+        # to be a power of 2 for the recursive division to end on the unit cells. The cropping is done last.
+        tilebox = cls.get_tile_bbox(idx, cellsize, tilesize, gridbbox, False)
+        itile = cls.get_tile_index(iy, ix, nytiles, nxtiles, sort)
         cells = []
-        def qtree_recurse(xmin, ymin, xmax, ymax):  
+        def set_tile(tile, ians, wans):
+            tile[cls.COL_INTERSECTS], tile[cls.COL_WITHIN] = ians or 0, wans or 0
+            tile[cls.COL_TILE] = itile
+            return tile
+        def add_block(bbox, ians, wans): # one geometry for the whole bounding box
+            tile = gpd.GeoDataFrame(geometry = [cls.bbox_to_polygon(*bbox)], crs = crs)
+            tile[cls.COL_X], tile[cls.COL_Y] = bbox[:2]
+            cells.append(set_tile(tile, ians, wans))
+        def add_cells(bbox, ians, wans): # all the unit cells of the bounding box
+            rows, cols = cls.get_pos_location(cellsize, bbox, xypos = xypos)
+            tile = gpd.GeoDataFrame({'geometry': cls.build_from_pos(cellsize, rows, cols, xypos = xypos),
+                                     cls.COL_X: [x for x in cols for y in rows],
+                                     cls.COL_Y: [y for x in cols for y in rows],
+                                    },
+                                    crs = crs
+                                   ).set_geometry('geometry')
+            cells.append(set_tile(tile, ians, wans))
+        def qtree_recurse(xmin, ymin, xmax, ymax):
             cheight, cwidth = ymax - ymin, xmax - xmin
-            if cheight < height and cwidth < width: return # do nothing
-            #elif cheight < height:                  cheight = height
-            #elif cwidth < width:                    cwidth = width
-            bbox = xmin, ymin, xmin+cwidth, ymin+cheight
-            # build the area tile
-            tile = gpd.GeoDataFrame(geometry = [cls.bbox_to_polygon(*bbox)], 
-                                    crs = crs)   
-            if buffer is not None:
-                tile = tile.buffer(buffer)
-            # test the whole tile
-            ians, wans = None, 0
-            if isinstance(mask, bool):
-                if mask is True:
-                    ians = 1
-            elif not mask is None:
-                for i in range(len(mask.geometry)):
-                    if wans in (False,0):
-                        wans = tile.within(mask.geometry.iloc[i]).tolist()[0] # note that wans = 1 => ians = 1
-                    if ians in (False,None,0):
-                        ians = 1 if wans in (True,1) else tile.intersects(mask.geometry.iloc[i]).tolist()[0]
-                    if ians in (True,1) and wans in (True,1):
-                        break
-            if wans in (True,1):
-                rows, cols  = cls.get_pos_location(cellsize, bbox, xypos = xypos)
-                tile = gpd.GeoDataFrame({'geometry': cls.build_from_pos(cellsize, rows, cols, xypos = xypos),
-                                         cls.COL_X: [x for x in cols for y in rows],
-                                         cls.COL_Y: [y for x in cols for y in rows],
-                                        }, 
-                                        crs = crs
-                                       ).set_geometry('geometry')
-            else:
-                tile[cls.COL_X], tile[cls.COL_Y] = tilebox[:2]
-            # for all processes tiles with not distinction
-            tile[cls.COL_INTERSECTS], tile[cls.COL_WITHIN] = ians or 0, wans or 0#np.nan
-            tile[cls.COL_TILE] = ix + iy*nxtiles                                          \
-                if (sort is False or sort.startswith('tile') or sort.endswith == 'rc')  \
-                else ix*nytiles + iy      
-            if wans in (True,1)                                                         \
-                    or (interior is False and ians in (True,1) and cheight <= height and cwidth <= width) \
-                    or trim is False:
-                cells.append(tile)
-                return            
-            elif ians in (False,0,None) and trim is True:
+            bbox = [xmin, ymin, xmax, ymax]
+            ians, wans = cls.test_mask(cls.bbox_to_polygon(*bbox), mask)
+            if trim is False: # same as the other processor: no division, and the tile is kept anyway
+                if ians in (True,1):    add_cells(bbox, ians, wans)
+                else:                   add_block(bbox, ians, wans)
                 return
-            # at this stage: wans in (False,0), ians in (True,1) and trim is True
-            cheight, cwidth = cheight/2, cwidth/2
-            qtree_recurse(xmin,        ymin,         xmin+cwidth,   ymin+cheight)
-            qtree_recurse(xmin+cwidth, ymin+cheight, xmax,          ymax)
-            qtree_recurse(xmin+cwidth, ymin,         xmax,          ymin+cheight)
-            qtree_recurse(xmin,        ymin+cheight, xmin+cwidth,   ymax)
+            if ians in (False,0,None):  # neither within, nor intersect: trim!
+                return
+            if wans in (True,1):
+                add_cells(bbox, ians, wans)
+                return
+            if cheight <= height and cwidth <= width: # a unit cell intersecting the mask
+                if interior is False:
+                    add_block(bbox, ians, wans)
+                return
+            # divide only along the dimensions larger than a unit cell, so that the unit cells can be not square
+            ys = [(ymin, ymin + cheight/2), (ymin + cheight/2, ymax)] if cheight > height else [(ymin, ymax)]
+            xs = [(xmin, xmin + cwidth/2), (xmin + cwidth/2, xmax)] if cwidth > width else [(xmin, xmax)]
+            for y0, y1 in ys:
+                for x0, x1 in xs:
+                    qtree_recurse(x0, y0, x1, y1)
         qtree_recurse(*tilebox)
         if cells == []:
             return None
-        return pd.concat(cells, axis=0, ignore_index=True)    
-    
+        tile = pd.concat(cells, axis=0, ignore_index=True)
+        if crop is True:
+            lower = tile.geometry.bounds
+            tile = tile[(lower['minx'] < gridbbox[2]) & (lower['miny'] < gridbbox[3])]
+            if tile.empty:
+                return None
+        return tile
+
     #/************************************************************************/
     def __call__(self, bbox = None, mask = None, crs = None, interior = False, 
                  trim = True, crop = False, drop = False):
@@ -276,17 +284,17 @@ class GridMaker(GridProcessor):
         except: raise TypeError("Wrong format for mask data")	
         # check crs flag
         try:
-            assert (crs is None or isinstance(crs, (string_types, integer_types)))
+            assert (crs is None or isinstance(crs, (str, int)) or hasattr(crs, 'to_wkt'))
         except: raise TypeError("Wrong format for projection")
         # update bbox/mask/rcs accordingly
         if crs is None:
             try:
                 crs = mask.crs
             except: raise IOError("No information for output grid reference system")
-        elif isinstance(crs, integer_types):
+        elif isinstance(crs, int):
             crs = str(crs) 
-        if not crs.startswith("EPSG"):
-            crs = "EPSG:%s" % crs 
+        if isinstance(crs, str) and not crs.startswith("EPSG"):
+            crs = "EPSG:%s" % crs  
         if isinstance(mask, pd.DataFrame): 
             try: # assuming there is a geometry
                 assert ("geometry" in mask.columns)
@@ -336,35 +344,31 @@ class GridMaker(GridProcessor):
         # verify processing mode
         if self.mode == 'qtree' and not all([math.log(t,2).is_integer() for t in tilesize]):
             raise IOError('Quadtree algorithm requires tile size to be a power of 2')
-        elif nytiles * nxtiles > 1 and self.mode != 'seq' and self.cores > 1:
-            # warnings.warn('No parallel processing available for unique tile')
-            cores, processor = 1, self.prll_process_tile
-        else:
-            cores, processor = self.cores, self.processor
+        cores = 1 if self.mode == 'seq' or nytiles * nxtiles == 1 else self.cores
         # start processing
-        pool = mp.Pool(processes = cores)
-        grid_tiles = [pool.apply_async(processor,
-                                       args = ([iy, ix, nytiles, nxtiles],
-                                               bbox, cellsize, tilesize, xypos,
-                                               mask, crs, interior,
-                                               sort, trim, crop, None))
-                        for iy in range(nytiles) for ix in range(nxtiles)]
-        pool.close()
-        pool.join()
-        grid = pd.concat([t.get() for t in grid_tiles if t is not None], 
-                         axis=0, ignore_index=True)
-        if self.sorted != False: 
-            if sort.startswith('tile'):   bycols = [cls.COL_TILE]
+        grid_tiles = self.run_tasks(self.processor,
+                                    [([iy, ix, nytiles, nxtiles],
+                                      bbox, cellsize, tilesize, xypos,
+                                      mask, crs, interior,
+                                      sort, trim, crop, None)
+                                     for iy in range(nytiles) for ix in range(nxtiles)],
+                                    cores)
+        grid_tiles = [t for t in grid_tiles if t is not None]
+        if grid_tiles == []: # all tiles were trimmed
+            grid = gpd.GeoDataFrame(columns = ['geometry'] + __drops, geometry = 'geometry', crs = crs)
+        else:
+            grid = pd.concat(grid_tiles, axis=0, ignore_index=True)
+        for col in (self.COL_INTERSECTS, self.COL_WITHIN):
+            grid[col] = grid[col].astype(int) # some tiles have 0/1 and others True/False
+        if self.sorted != False:
+            if sort.startswith('tile'):   bycols = [self.COL_TILE]
             else:                         bycols = []
-            if sort.endswith == 'rc':     bycols.extend([cls.COL_X, cls.COL_Y])
-            elif sort.endswith == 'cr':   bycols.extend([cls.COL_Y, cls.COL_X])
-            grid.sort_values(by = bycols, axis = 0, ascending=asc, inplace = True, 
-                             ignore_index = True)
-        if drop != False: 
-            grid.drop(columns = drop, axis = 1, inplace = True, errors = 'ignore')
-        if False and nytiles * nxtiles == 1: # and self.COL_TILE in grid.columns:
-            grid.drop(columns = self.COL_TILE, axis = 1, inplace = True, errors = 'ignore')
-        return gpd.GeoDataFrame(grid, crs = crs).set_geometry('geometry')     
+            if sort.endswith('rc'):       bycols.extend([self.COL_Y, self.COL_X]) # rows then columns
+            elif sort.endswith('cr'):     bycols.extend([self.COL_X, self.COL_Y]) # columns then rows
+            grid = grid.sort_values(by = bycols, axis = 0, ascending = self.asc, ignore_index = True)
+        if drop != False:
+            grid = grid.drop(columns = drop, errors = 'ignore')
+        return gpd.GeoDataFrame(grid, crs = crs).set_geometry('geometry')
 
 
 #==============================================================================
