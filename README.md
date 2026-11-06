@@ -59,6 +59,12 @@ The following classes are available:
 >>> from pygridmap.overlay import GridOverlay
 ```
 
+The following modules produce tiled grids for web mapping applications such as [GridViz](https://github.com/eurostat/gridviz):
+```python
+>>> from pygridmap import gridtiler, gridtiler_raster
+```
+See their [documentation and examples](https://github.com/eurostat/gridtiler/tree/main/py).
+
 *Through the `bash` command*
 
 **Notes**
