@@ -128,7 +128,7 @@ def grid_tiling(
             #open tiled CSV file of create it if it does not exists
             file_path = t_folder + str(yt) + "." + (file_extension if format=="csv" else "csv")
             file_exists = os.path.exists(file_path)
-            with open(file_path, 'a', newline='') as csvfile:
+            with open(file_path, 'a', newline='', encoding='utf-8') as csvfile:
 
                 #get header
                 if csv_header==None:
@@ -320,7 +320,7 @@ def grid_transformation(input_file, function, output_file, input_file_delimiter 
 
     #open file to read
     with open(input_file, 'r', encoding='utf-8-sig') as infile:
-        with open(output_file, 'w', newline='') as outfile:
+        with open(output_file, 'w', newline='', encoding='utf-8') as outfile:
             csvreader = csv.DictReader(infile, delimiter=input_file_delimiter)
             csvwriter = None
 
@@ -416,7 +416,7 @@ def grid_aggregation(
     round_to_tolerance = lambda number : round(number * tolerance) / tolerance
 
     writer = None
-    with open(output_file, 'w', newline='') as outfile:
+    with open(output_file, 'w', newline='', encoding='utf-8') as outfile:
 
         #aggregate cell values
         for xa, d in aggregation_index.items():
